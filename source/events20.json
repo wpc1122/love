@@ -1,0 +1,162 @@
+{
+  "_说明": "由 D:/Desktop/events.csv + 图片文件夹 生成。photo 字段已按文件名绑定到对应小图（{n}_s.webp）。",
+  "enabled": true,
+  "events": [
+    {
+      "date": "2023-07-28",
+      "title": "确认关系",
+      "description": "我们在一起啦",
+      "photo": "1_s.webp"
+    },
+    {
+      "date": "2023-10-23",
+      "title": "过生日",
+      "description": "吃小蛋糕喽",
+      "photo": "2_s.webp"
+    },
+    {
+      "date": "2024-02-28",
+      "title": "Citywalk",
+      "description": "半夜一起压马路",
+      "photo": "3_s.webp"
+    },
+    {
+      "date": "2024-02-28",
+      "title": "糖葫芦",
+      "description": "还挺甜的",
+      "photo": "4_s.webp"
+    },
+    {
+      "date": "2024-03-02",
+      "title": "3D版光头强",
+      "description": "强哥夯爆啦",
+      "photo": "5_s.webp"
+    },
+    {
+      "date": "2024-03-02",
+      "title": "狗咖",
+      "description": "小柴还会wink",
+      "photo": "6_s.webp"
+    },
+    {
+      "date": "2024-03-02",
+      "title": "大草莓",
+      "description": "个头不大，还挺好吃",
+      "photo": "7_s.webp"
+    },
+    {
+      "date": "2024-03-21",
+      "title": "吃点好的",
+      "description": "天冷就得吃点热乎的",
+      "photo": "8_s.webp"
+    },
+    {
+      "date": "2024-05-02",
+      "title": "我在北京",
+      "description": "被商城里的香水味儿熏出来了",
+      "photo": "9_s.webp"
+    },
+    {
+      "date": "2024-05-23",
+      "title": "毕业快乐",
+      "description": "公主毕业啦",
+      "photo": "10_s.webp"
+    },
+    {
+      "date": "2024-06-06",
+      "title": "battle到老",
+      "description": "新对戒漂亮吧",
+      "photo": "11_s.webp"
+    },
+    {
+      "date": "2024-06-07",
+      "title": "一起逛超市",
+      "description": "吃吃喝喝玩玩逛逛",
+      "photo": "12_s.webp"
+    },
+    {
+      "date": "2024-07-12",
+      "title": "大连",
+      "description": "来海边溜溜弯",
+      "photo": "13_s.webp"
+    },
+    {
+      "date": "2024-07-13",
+      "title": "看小沈阳演唱会",
+      "description": "谁能火过09年的小沈阳啊",
+      "photo": "14_s.webp"
+    },
+    {
+      "date": "2024-07-13",
+      "title": "抱着我的宝贝",
+      "description": "出租车大哥：抱着多累啊，打车走吧",
+      "photo": "15_s.webp"
+    },
+    {
+      "date": "2024-07-28",
+      "title": "一周年",
+      "description": "程濛厚爱",
+      "photo": "16_s.webp"
+    },
+    {
+      "date": "2024-08-10",
+      "title": "看张杰演唱会",
+      "description": "杰哥演唱会七夕专场",
+      "photo": "17_s.webp"
+    },
+    {
+      "date": "2025-01-02",
+      "title": "主角演绎成",
+      "description": "老婆美爆了",
+      "photo": "18_s.webp"
+    },
+    {
+      "date": "2025-01-04",
+      "title": "滑雪",
+      "description": "俩菜鸟初级赛道滑一天",
+      "photo": "19_s.webp"
+    },
+    {
+      "date": "2025-07-28",
+      "title": "两周年",
+      "description": "程濛厚爱",
+      "photo": "20_s.webp"
+    },
+    {
+      "date": "2025-10-05",
+      "title": "见到张靓颖了",
+      "description": "能不能多来北方演出啊",
+      "photo": "21_s.webp"
+    },
+    {
+      "date": "2025-10-07",
+      "title": "星星酱登场",
+      "description": "我有大姑娘了",
+      "photo": "22_s.webp"
+    },
+    {
+      "date": "2026-03-01",
+      "title": "沈阳故宫",
+      "description": "老铁，不服来战",
+      "photo": "23_s.webp"
+    },
+    {
+      "date": "2026-03-28",
+      "title": "二刷张杰",
+      "description": "舞台好高级，还有小火车",
+      "photo": "24_s.webp"
+    },
+    {
+      "date": "2026-04-05",
+      "title": "魔丸派派",
+      "description": "要二胎了，姐俩还挺和谐",
+      "photo": "25_s.webp"
+    },
+    {
+      "date": "2026-07-29",
+      "title": "全家福",
+      "description": "一个灵珠，一个魔丸",
+      "photo": "26_s.webp"
+    }
+  ]
+}
