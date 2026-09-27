@@ -1,0 +1,26 @@
+[
+  {
+    "id": "1",
+    "event_date": "2024-02-14",
+    "title": "初次相遇",
+    "description": "在樱花盛开的季节，我们在校园里相遇了。",
+    "icon": "heart",
+    "order": 0
+  },
+  {
+    "id": "2",
+    "event_date": "2024-03-01",
+    "title": "第一次约会",
+    "description": "一起去了那家温馨的咖啡店。",
+    "icon": "utensils",
+    "order": 1
+  },
+  {
+    "id": "3",
+    "event_date": "2024-05-20",
+    "title": "正式在一起",
+    "description": "在520这个特别的日子，我们确定了关系。",
+    "icon": "heart-handshake",
+    "order": 2
+  }
+]
