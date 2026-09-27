@@ -1,0 +1,20 @@
+{
+  "id": "main",
+  "site_title": "程濛厚爱",
+  "site_subtitle": "记录我们的爱情故事",
+  "hero_background": "http://192.168.0.159:5177/uploads/1784688221459_ekywm7ykg.jpg",
+  "hero_overlay_color": "#000000",
+  "hero_overlay_opacity": 0.3,
+  "navbar_color": "rgba(255, 255, 255, 0.95)",
+  "footer_text": "© 2026 程濛厚爱 - 记录我们的美好时光",
+  "footer_links": [],
+  "primary_color": "#fb7185",
+  "secondary_color": "#c4b5fd",
+  "font_family": "Ma Shan Zheng, Playfair Display, serif",
+  "countdown_title": "我们在一起已经",
+  "gallery_title": "甜蜜瞬间",
+  "timeline_title": "爱情旅程",
+  "favicon_url": "",
+  "updated_at": "2026-07-24T01:47:35.018Z",
+  "hero_background_portrait": "http://192.168.0.159:5177/uploads/1784857650534_pqdfwjj6u.jpg"
+}
