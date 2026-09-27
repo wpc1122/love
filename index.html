@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#fff7f8">
+<meta name="description" content="记录我们的爱情故事">
+<meta name="referrer" content="same-origin">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>我们的小站</title>
+<style>
+:root{
+  --primary:#fb7185; --secondary:#c4b5fd;
+  --ink:#3d3436; --ink-soft:#8a7c80; --line:#f2e4e7;
+  --bg:#fffafb; --card:#ffffff;
+  --radius:20px;
+  --shadow:0 1px 2px rgba(60,40,50,.04),0 8px 24px -12px rgba(60,40,50,.16);
+  --shadow-lg:0 24px 60px -24px rgba(60,40,50,.35);
+  --serif:"Songti SC","Noto Serif SC",Georgia,"Times New Roman",serif;
+  --sans:system-ui,-apple-system,"PingFang SC","Microsoft YaHei","Helvetica Neue",Arial,sans-serif;
+  --phbg:#fdeff1;      /* 图片未加载时的底色 */
+  --paper:#ffffff;     /* 拍立得纸面 */
+  --paper-ink:#3d3436; /* 纸面上的字 */
+  --track:#f3dbe0;     /* 轨道/进度底色 */
+}
+/* 夜间模式：跟随系统，夜里自动柔和变暗 */
+@media(prefers-color-scheme:dark){
+  :root{
+    --ink:#f1e7ea; --ink-soft:#a4919b; --line:#33242a;
+    --bg:#141013; --card:#1e161b;
+    --phbg:#2a1e23; --paper:#f4ebee; --paper-ink:#3d3436; --track:#3a2a31;
+    --shadow:0 1px 2px rgba(0,0,0,.35),0 8px 24px -12px rgba(0,0,0,.6);
+    --shadow-lg:0 24px 60px -24px rgba(0,0,0,.85);
+  }
+  .hero .veil{
+    background:
+      radial-gradient(120% 80% at 50% 20%,rgba(0,0,0,.3),rgba(0,0,0,.68)),
+      linear-gradient(180deg,rgba(16,6,12,.62),rgba(16,6,12,.4) 45%,var(--bg));
+  }
+  .hero.noimg .veil{background:linear-gradient(160deg,#7f4b5c,#4a3a72 45%,var(--bg))}
+  .nav.stuck{background:rgba(20,16,19,.85);backdrop-filter:saturate(1.4) blur(14px)}
+  .nav.stuck .brand{color:var(--ink)}
+  .nav.stuck .menu a{color:var(--ink-soft);text-shadow:none}
+  .nav.stuck .menu a:hover,.nav.stuck .menu a.on{background:var(--card);color:var(--ink);box-shadow:var(--shadow)}
+  .btn-g{background:var(--card);color:var(--ink)}
+  .zi,.mp-ctrls button{background:var(--card)}
+  .mp-lyric li{color:#7c6a71}
+  .mpanel{background:rgba(30,22,27,.94)}
+  .mp-bar{background:var(--line)}
+  footer{background:linear-gradient(180deg,transparent,rgba(251,113,133,.07))}
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{
+  margin:0;font-family:var(--sans);color:var(--ink);background:var(--bg);
+  line-height:1.7;-webkit-font-smoothing:antialiased;overflow-x:hidden;
+}
+img{max-width:100%;display:block}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+::selection{background:var(--primary);color:#fff}
+.wrap{width:min(1120px,92vw);margin-inline:auto}
+.sec{padding:clamp(56px,9vw,110px) 0}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--primary);font-weight:700;margin-bottom:14px;
+}
+.eyebrow::before{content:"";width:26px;height:1px;background:var(--primary);opacity:.6}
+h2.title{
+  font-family:var(--serif);font-weight:600;letter-spacing:.02em;
+  font-size:clamp(28px,4.4vw,44px);margin:0 0 10px;
+}
+.sub{color:var(--ink-soft);margin:0 0 44px;max-width:52ch}
+
+/* ---------- nav：位于照片上方时透明+白字，滚出首屏后才变浅色磨砂+深字 ---------- */
+.nav{
+  position:fixed;inset:0 0 auto 0;z-index:60;
+  background:transparent;transition:background .35s ease,box-shadow .35s ease;
+  border-bottom:1px solid transparent;
+}
+.nav.stuck{
+  background:rgba(255,250,251,.85);backdrop-filter:saturate(1.4) blur(14px);
+  border-bottom-color:var(--line);box-shadow:0 6px 24px -18px rgba(60,40,50,.5);
+}
+.nav::after{
+  content:"";position:absolute;left:0;bottom:-1px;height:2px;width:var(--p,0%);
+  background:linear-gradient(90deg,var(--primary),var(--secondary));
+  transition:width .12s linear;
+}
+.nav .wrap{display:flex;align-items:center;gap:20px;height:64px}
+/* 默认（照片上方）：白字 + 微光晕，保证深色照片上可读 */
+.brand{font-family:var(--serif);font-size:19px;font-weight:600;letter-spacing:.06em;white-space:nowrap;
+  color:rgba(255,255,255,.95);text-shadow:0 1px 10px rgba(0,0,0,.45)}
+.brand i{color:var(--primary);font-style:normal;padding:0 2px}
+.menu{margin-left:auto;display:flex;gap:4px;align-items:center}
+.menu a{
+  padding:8px 14px;border-radius:999px;font-size:14px;color:rgba(255,255,255,.82);
+  transition:.2s;white-space:nowrap;text-shadow:0 1px 10px rgba(0,0,0,.45);
+}
+.menu a:hover,.menu a.on{background:rgba(255,255,255,.16);color:#fff;box-shadow:none}
+/* 滚动进入内容区后：切深色字 */
+.nav.stuck .brand{color:var(--ink);text-shadow:none}
+.nav.stuck .menu a{color:var(--ink-soft);text-shadow:none}
+.nav.stuck .menu a:hover,.nav.stuck .menu a.on{background:#fff;color:var(--ink);box-shadow:var(--shadow)}
+@media(max-width:720px){
+  .nav .wrap{height:58px}
+  .menu{margin-left:auto;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .menu::-webkit-scrollbar{display:none}
+  .menu a{padding:7px 11px;font-size:13px}
+}
+
+/* ---------- hero ---------- */
+.hero{
+  position:relative;min-height:100svh;display:grid;place-items:center;
+  text-align:center;color:#fff;isolation:isolate;overflow:hidden;
+}
+.hero .bg{position:absolute;inset:0;z-index:-2}
+.hero .bg img{width:100%;height:100%;object-fit:cover;transform:scale(1.06)}
+.hero .veil{
+  position:absolute;inset:0;z-index:-1;
+  background:
+    radial-gradient(120% 80% at 50% 20%,rgba(0,0,0,.15),rgba(0,0,0,.55)),
+    linear-gradient(180deg,rgba(30,10,20,.45),rgba(30,10,20,.25) 45%,rgba(255,250,251,.96));
+}
+.hero.noimg .veil{background:linear-gradient(160deg,#fecdd3,#e9d5ff 45%,#fffafb)}
+.hero-in{padding:120px 0 80px}
+.badge{
+  display:inline-flex;align-items:center;gap:8px;padding:7px 16px;border-radius:999px;
+  background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);
+  backdrop-filter:blur(8px);font-size:13px;letter-spacing:.08em;margin-bottom:26px;
+}
+.names{
+  font-family:var(--serif);font-weight:600;margin:0;line-height:1.18;
+  font-size:clamp(38px,9vw,84px);letter-spacing:.04em;
+  text-shadow:0 4px 30px rgba(0,0,0,.25);
+}
+.names .amp{
+  display:inline-block;margin:0 .28em;color:var(--primary);
+  font-size:.62em;vertical-align:.16em;
+}
+.hero p.lead{
+  margin:22px auto 0;max-width:30ch;font-size:clamp(15px,2.2vw,19px);
+  color:rgba(255,255,255,.9);letter-spacing:.1em;
+}
+.clock{display:flex;justify-content:center;gap:clamp(10px,2.4vw,22px);margin:44px 0 8px;flex-wrap:wrap}
+.clock div{
+  min-width:78px;padding:14px 10px;border-radius:16px;
+  background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.24);
+  backdrop-filter:blur(10px);
+}
+.clock b{
+  display:block;font-size:clamp(24px,4.6vw,38px);font-weight:600;line-height:1.1;
+  font-variant-numeric:tabular-nums;
+}
+.clock span{font-size:11px;letter-spacing:.18em;opacity:.82}
+.clock-note{margin:16px 0 0;font-size:13px;color:rgba(255,255,255,.86);letter-spacing:.14em}
+.clock-note b{font-weight:600}
+.cta{display:flex;gap:12px;justify-content:center;margin-top:38px;flex-wrap:wrap}
+.btn{
+  display:inline-flex;align-items:center;gap:8px;padding:13px 26px;border-radius:999px;
+  font-size:15px;font-weight:600;transition:.25s;box-shadow:var(--shadow);
+}
+.btn-p{background:var(--primary);color:#fff}
+.btn-p:hover{transform:translateY(-2px);box-shadow:0 14px 30px -12px var(--primary)}
+.btn-g{background:rgba(255,255,255,.9);color:var(--ink)}
+.btn-g:hover{transform:translateY(-2px)}
+.heart-field{position:absolute;inset:0;pointer-events:none;z-index:-1;overflow:hidden}
+.heart-field i{
+  position:absolute;bottom:-40px;opacity:0;font-size:18px;
+  animation:float 14s linear infinite;
+}
+@keyframes float{
+  0%{transform:translateY(0) rotate(0);opacity:0}
+  12%{opacity:.5}
+  100%{transform:translateY(-108vh) rotate(220deg);opacity:0}
+}
+.down{
+  position:absolute;left:50%;bottom:26px;translate:-50% 0;color:rgba(255,255,255,.85);
+  animation:bob 2.4s ease-in-out infinite;
+}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
+/* 首屏入场：依次浮现 */
+.hero-in>*{opacity:0;animation:rise .9s cubic-bezier(.2,.8,.2,1) forwards}
+.hero-in .badge{animation-delay:.1s}
+.hero-in .names{animation-delay:.24s}
+.hero-in .lead{animation-delay:.62s}
+.hero-in .clock{animation-delay:.78s}
+.hero-in .clock-note{animation-delay:.92s}
+.hero-in .cta{animation-delay:1.02s}
+@keyframes rise{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+/* 名字逐字浮现 */
+.names .ch{display:inline-block;opacity:0;animation:chIn .6s cubic-bezier(.2,.8,.2,1) forwards}
+@keyframes chIn{
+  from{opacity:0;transform:translateY(.22em) rotate(-5deg) scale(.94)}
+  to{opacity:1;transform:none}
+}
+/* 花瓣飘落层 */
+#petals{position:fixed;inset:0;z-index:50;pointer-events:none}
+
+/* ---------- timeline ---------- */
+.tl{position:relative;padding-left:26px;max-width:760px}
+.tl::before{content:"";position:absolute;left:7px;top:8px;bottom:8px;width:2px;
+  background:linear-gradient(180deg,var(--primary),var(--secondary));opacity:.35;border-radius:2px}
+.tl-item{position:relative;padding:0 0 34px;opacity:0;transform:translateY(22px);transition:.6s}
+.tl-item.in{opacity:1;transform:none}
+.tl-item::before{
+  content:"";position:absolute;left:-26px;top:8px;width:16px;height:16px;border-radius:50%;
+  background:#fff;border:3px solid var(--primary);box-shadow:0 0 0 4px rgba(251,113,133,.14);
+}
+.tl-date{font-size:12px;letter-spacing:.16em;color:var(--primary);font-weight:700}
+.tl-card{
+  margin-top:6px;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:20px 24px;box-shadow:var(--shadow);transition:.25s;
+}
+.tl-card:hover{transform:translateX(4px);box-shadow:var(--shadow-lg)}
+.tl-card h3{margin:0 0 6px;font-size:18px;font-family:var(--serif);font-weight:600}
+.tl-card p{margin:0;color:var(--ink-soft);font-size:15px}
+
+/* ---------- gallery ---------- */
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(210px,1fr))}
+.shot{
+  position:relative;aspect-ratio:1/1;border-radius:16px;overflow:hidden;
+  background:#fdeff1;box-shadow:var(--shadow);cursor:zoom-in;opacity:0;
+  transform:translateY(18px);transition:opacity .5s,transform .5s;
+}
+.shot.in{opacity:1;transform:none}
+.shot img{width:100%;height:100%;object-fit:cover;transition:transform .6s cubic-bezier(.2,.8,.2,1)}
+.shot:hover img{transform:scale(1.06)}
+.shot figcaption{
+  position:absolute;inset:auto 0 0 0;padding:28px 14px 12px;font-size:13px;color:#fff;
+  background:linear-gradient(180deg,transparent,rgba(30,10,20,.7));opacity:0;transition:.3s;
+}
+.shot:hover figcaption{opacity:1}
+
+/* ---------- journey：时间轴 + 联动大图 ---------- */
+.journey{display:grid;grid-template-columns:1.02fr .98fr;gap:clamp(26px,4vw,54px);align-items:start}
+.stage{position:sticky;top:92px}
+/* 拍立得相框：白纸 + 轻微倾斜 */
+.frame{
+  position:relative;background:var(--paper);padding:14px 14px 2px;border-radius:8px;
+  box-shadow:var(--shadow-lg);cursor:zoom-in;
+  transform:rotate(-.8deg);transition:transform .5s cubic-bezier(.2,.8,.2,1);
+}
+.frame:hover{transform:rotate(0deg) translateY(-3px)}
+.frame .ph{
+  position:relative;aspect-ratio:4/5;border-radius:3px;overflow:hidden;background:var(--phbg);
+}
+/* 双层交叉淡入：随滑动平滑换图 */
+.frame .ly{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  opacity:0;transition:opacity .55s ease,transform 6s linear;
+}
+.frame .ly.on{opacity:1}
+.frame .ly.zoom{transform:scale(1.06)}
+/* 加载前的模糊占位（LQIP） */
+.frame .lq{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  filter:blur(14px);transform:scale(1.1);transition:opacity .5s ease;
+}
+.frame .lq.off{opacity:0}
+.zi{
+  position:absolute;right:14px;bottom:14px;width:38px;height:38px;border-radius:50%;
+  background:rgba(255,255,255,.9);display:grid;place-items:center;font-size:15px;
+  box-shadow:var(--shadow);opacity:0;transition:.3s;
+}
+.frame:hover .zi{opacity:1}
+.pcap{padding:16px 6px 12px;text-align:center}
+.pcap b{
+  display:block;font-family:var(--serif);font-style:italic;font-weight:600;
+  font-size:18px;color:var(--paper-ink);line-height:1.5;letter-spacing:.03em;
+}
+.pcap span{font-size:11px;color:var(--primary);letter-spacing:.16em;font-weight:700}
+.jbar{display:flex;gap:6px;justify-content:center;margin-top:14px}
+.jbar i{
+  width:22px;height:3px;border-radius:99px;background:var(--track);transition:.3s;
+}
+.jbar i.on{background:var(--primary);width:34px}
+/* 时间轴：连线随滚动生长 */
+.tl-wrap{position:relative}
+.tl-line{
+  position:absolute;left:7px;top:8px;width:2px;height:0;border-radius:2px;
+  background:linear-gradient(180deg,var(--primary),var(--secondary));
+  transition:height .45s cubic-bezier(.2,.8,.2,1);
+}
+.tl-item.active .tl-card{border-color:#ffd9e0;box-shadow:var(--shadow-lg);transform:translateX(4px)}
+.tl-item.active::before{box-shadow:0 0 0 6px rgba(251,113,133,.2)}
+.tl-item{cursor:pointer}
+
+/* ---------- 多事件：年份分组 / 紧凑模式 / 计数 ---------- */
+.tl-year{position:relative;padding:6px 0 20px}
+.tl-year span{
+  font-family:var(--serif);font-size:24px;font-weight:600;letter-spacing:.06em;
+  color:var(--ink-soft);opacity:.5;
+}
+.tl-year::after{
+  content:"";position:absolute;left:64px;right:0;top:50%;height:1px;
+  background:linear-gradient(90deg,var(--line),transparent);
+}
+/* 事件多时自动紧凑 */
+.tl.dense .tl-item{padding-bottom:20px}
+.tl.dense .tl-card{padding:15px 18px;border-radius:14px}
+.tl.dense .tl-card h3{font-size:16px;margin-bottom:4px}
+.tl.dense .tl-card p{font-size:14px;line-height:1.6}
+.tl.dense .tl-year{padding:2px 0 14px}
+.tl.dense .tl-year span{font-size:21px}
+.jcount{text-align:center;margin-top:12px;font-size:11px;color:var(--ink-soft);letter-spacing:.18em}
+.jcount b{
+  font-family:var(--serif);font-size:16px;font-weight:600;color:var(--primary);
+  font-variant-numeric:tabular-nums;letter-spacing:0;
+}
+
+/* ---------- 事件封面卡：无照片时的排版封面 ---------- */
+.frame .cv{
+  position:absolute;inset:0;display:grid;place-items:center;text-align:center;
+  padding:24px;color:#fff;opacity:0;transition:opacity .5s ease;overflow:hidden;
+}
+.frame .cv.on{opacity:1}
+.frame .cv::after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(120% 80% at 50% 0%,rgba(255,255,255,.22),transparent 62%);
+}
+.cv .cico{
+  width:42px;height:42px;opacity:.92;margin-bottom:16px;
+  filter:drop-shadow(0 3px 10px rgba(0,0,0,.16));
+}
+.cv .cday{
+  font-family:var(--serif);font-size:clamp(54px,8.5vw,84px);font-weight:600;line-height:.86;
+  letter-spacing:-.02em;text-shadow:0 8px 26px rgba(0,0,0,.2);font-variant-numeric:tabular-nums;
+}
+.cv .cmon{
+  margin-top:12px;font-size:11px;letter-spacing:.32em;font-weight:700;opacity:.92;
+  text-shadow:0 2px 8px rgba(0,0,0,.18);
+}
+.cv .cttl{
+  margin-top:18px;font-family:var(--serif);font-style:italic;font-size:15px;line-height:1.6;
+  opacity:.96;text-shadow:0 2px 10px rgba(0,0,0,.22);
+}
+.cv .cno{
+  position:absolute;right:16px;top:12px;font-size:11px;letter-spacing:.2em;opacity:.6;font-weight:700;
+}
+@media(max-width:900px){
+  .journey{grid-template-columns:1fr;gap:22px}
+  .stage{position:sticky;top:58px;z-index:5;background:var(--bg);padding-bottom:8px;max-width:620px;margin-inline:auto;width:100%}
+  .frame{transform:rotate(-.6deg);max-width:520px;margin-inline:auto}
+  .frame .ph{aspect-ratio:16/11}
+  .pcap{padding:13px 6px 8px}
+  .pcap b{font-size:16px}
+}
+
+/* ---------- 漂浮音乐窗 ---------- */
+.mfloat{position:fixed;right:clamp(12px,2.4vw,24px);bottom:clamp(12px,2.4vw,24px);z-index:80;
+  display:flex;flex-direction:column;align-items:flex-end;gap:12px}
+.mpanel{
+  width:min(318px,84vw);background:rgba(255,255,255,.94);backdrop-filter:saturate(1.4) blur(16px);
+  border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow-lg);padding:16px 18px 14px;
+  opacity:0;transform:scale(.92) translateY(12px);transform-origin:bottom right;pointer-events:none;
+  transition:.3s cubic-bezier(.2,.8,.2,1);
+}
+.mfloat.open .mpanel{opacity:1;transform:none;pointer-events:auto}
+.mp-head{display:flex;align-items:flex-start;gap:10px}
+.mp-head .t{min-width:0;flex:1}
+.mp-head b{display:block;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mp-head span{font-size:12px;color:var(--ink-soft)}
+.mp-x{font-size:20px;line-height:1;color:var(--ink-soft);padding:2px 4px}
+.mp-lyric{height:78px;overflow:hidden;position:relative;margin:12px 0 10px;
+  mask-image:linear-gradient(180deg,transparent,#000 30%,#000 70%,transparent)}
+.mp-lyric ul{list-style:none;margin:0;padding:0;transition:transform .45s cubic-bezier(.2,.8,.2,1);text-align:center}
+.mp-lyric li{padding:3px 0;font-size:13px;color:#c6b0b6;transition:.3s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mp-lyric li.cur{color:var(--primary);font-weight:600}
+.mp-bar{height:4px;border-radius:99px;background:#f4e6e9;overflow:hidden;cursor:pointer}
+.mp-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--primary),var(--secondary))}
+.mp-ctrls{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:12px}
+.mp-ctrls button{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:13px;
+  background:#fff;border:1px solid var(--line);transition:.2s}
+.mp-ctrls button:hover{border-color:var(--primary);color:var(--primary)}
+.mp-ctrls .main{width:44px;height:44px;background:var(--primary);border-color:var(--primary);color:#fff;font-size:15px}
+.mfab{
+  width:58px;height:58px;border-radius:50%;position:relative;flex:none;
+  background:radial-gradient(circle at 50% 50%,#fff 0 19%,#241a20 19.5% 99%,#3a2c34 100%);
+  box-shadow:var(--shadow-lg);display:grid;place-items:center;color:#fff;font-size:17px;
+  animation:spin 14s linear infinite;animation-play-state:paused;transition:transform .25s;
+}
+.mfloat.playing .mfab{animation-play-state:running}
+.mfab:hover{transform:scale(1.07)}
+.mfab.idle::after{
+  content:"";position:absolute;inset:-6px;border-radius:50%;border:2px solid var(--primary);
+  animation:pulse 2s ease-out infinite;
+}
+@keyframes pulse{0%{transform:scale(.9);opacity:.7}100%{transform:scale(1.25);opacity:0}}
+@media(max-width:520px){
+  .mpanel{width:min(300px,88vw)}
+  .mfab{width:50px;height:50px;font-size:15px}
+  .mp-lyric{height:68px}
+  .hero-in{padding:104px 0 64px}
+  .clock div{min-width:70px;padding:12px 8px}
+}
+
+/* ---------- footer ---------- */
+footer{
+  background:linear-gradient(180deg,transparent,rgba(253,232,236,.5));
+  border-top:1px solid var(--line);padding:44px 0 100px;text-align:center;
+}
+footer p{margin:0;color:var(--ink-soft);font-size:13px;letter-spacing:.06em}
+footer .sm{margin-top:10px;font-family:var(--serif);font-size:15px;color:var(--ink)}
+
+/* ---------- lightbox ---------- */
+.lb{
+  position:fixed;inset:0;z-index:99;background:#150c11;display:none;
+  place-items:center;padding:4vh 4vw;
+}
+.lb.open{display:grid}
+body.locked{overflow:hidden}
+.lb img{max-width:100%;max-height:88vh;border-radius:12px;box-shadow:0 30px 80px -20px rgba(0,0,0,.8)}
+.lb .x{position:absolute;top:16px;right:20px;color:#fff;font-size:30px;line-height:1;opacity:.8}
+.lb .nav{
+  position:absolute;top:50%;translate:0 -50%;color:#fff;font-size:26px;
+  width:48px;height:48px;border-radius:50%;display:grid;place-items:center;
+  background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);opacity:.85;transition:.2s;
+}
+.lb .nav:hover{background:rgba(255,255,255,.22)}
+.lb .nav.prev{left:2vw}.lb .nav.next{right:2vw}
+
+/* ---------- 通用弹层锁定滚动 ---------- */
+body.locked{overflow:hidden}
+
+.reveal{opacity:0;transform:translateY(24px);transition:.7s cubic-bezier(.2,.8,.2,1)}
+.reveal.in{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+  .reveal,.tl-item{opacity:1;transform:none}
+}
+
+/* ---------- 开场加载 ---------- */
+.loader{
+  position:fixed;inset:0;z-index:999;background:var(--bg);
+  display:grid;place-items:center;transition:opacity .55s ease,visibility .55s;
+}
+.loader.done{opacity:0;visibility:hidden;pointer-events:none}
+.ld-box{display:grid;justify-items:center;text-align:center}
+.ld-heart{width:72px;height:72px;position:relative;display:grid;place-items:center}
+.ld-heart svg{
+  width:42px;height:42px;fill:var(--primary);
+  animation:ldBeat 1.15s ease-in-out infinite;
+  filter:drop-shadow(0 6px 16px rgba(251,113,133,.4));
+}
+.ld-heart::before,.ld-heart::after{
+  content:"";position:absolute;inset:0;border-radius:50%;
+  border:1.5px solid var(--primary);opacity:0;animation:ldRing 1.7s ease-out infinite;
+}
+.ld-heart::after{animation-delay:.85s}
+@keyframes ldBeat{
+  0%,100%{transform:scale(1)}12%{transform:scale(1.2)}24%{transform:scale(1)}
+  36%{transform:scale(1.12)}48%{transform:scale(1)}
+}
+@keyframes ldRing{0%{transform:scale(.5);opacity:.55}100%{transform:scale(1.4);opacity:0}}
+.ld-title{
+  margin-top:30px;font-family:var(--serif);font-size:22px;font-weight:600;
+  letter-spacing:.32em;text-indent:.32em;color:var(--ink);
+  animation:ldFade .7s .2s cubic-bezier(.2,.8,.2,1) backwards;
+}
+.ld-bar{
+  margin:20px auto 0;width:120px;height:2px;border-radius:99px;
+  background:var(--track);overflow:hidden;
+}
+.ld-bar i{
+  display:block;height:100%;width:0;
+  background:linear-gradient(90deg,var(--primary),var(--secondary));
+  animation:ldBar 2.2s .2s ease-out forwards;
+}
+@keyframes ldBar{
+  0%{width:0}
+  70%{width:64%}
+  100%{width:92%}
+}
+@keyframes ldFade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+/* 首访时：入场动画先暂停，等加载层退场后再继续 */
+.hold .hero-in>*,.hold .hero-in .ch{animation-play-state:paused}
+</style>
+</head>
+<body>
+<noscript><style>.loader{display:none}</style></noscript>
+<div class="loader" id="loader" aria-hidden="true">
+  <div class="ld-box">
+    <div class="ld-heart">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"
+           stroke-linecap="round" stroke-linejoin="round" style="color:var(--primary)">
+        <path d="M12 20.4S3.6 15 3.6 9.3a4.8 4.8 0 0 1 8.4-3.2 4.8 4.8 0 0 1 8.4 3.2c0 5.7-8.4 11.1-8.4 11.1z" fill="currentColor" stroke="none"/>
+      </svg>
+    </div>
+    <div class="ld-title" id="ldTitle">程濛厚爱</div>
+    <div class="ld-bar"><i></i></div>
+  </div>
+</div>
+
+<header class="nav" id="nav">
+  <div class="wrap">
+    <a class="brand" id="brand" href="#top">程濛厚爱</a>
+    <nav class="menu" id="menu">
+      <a href="#top">首页</a>
+      <a href="#story">爱情旅程</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero" id="top">
+  <div class="bg" id="heroBg"></div>
+  <div class="veil"></div>
+  <div class="heart-field" id="hearts" aria-hidden="true"></div>
+  <div class="wrap hero-in">
+    <div class="badge" id="badge">始于 <b id="since">—</b></div>
+    <h1 class="names"><span id="n1">你</span><span class="amp">&amp;</span><span id="n2">我</span></h1>
+    <p class="lead" id="lead"></p>
+    <div class="clock" id="clock">
+      <div><b id="cd-y">0</b><span>YEARS</span></div>
+      <div><b id="cd-mo">0</b><span>MONTHS</span></div>
+      <div><b id="cd-d">0</b><span>DAYS</span></div>
+    </div>
+    <p class="clock-note">共 <b id="cd-total">0</b> 天，谢谢你一直在</p>
+    <div class="cta">
+      <a class="btn btn-p" href="#story">我们的旅程</a>
+    </div>
+  </div>
+  <a class="down" href="#story" aria-label="向下滚动">⌄</a>
+</section>
+
+<section class="sec" id="story">
+  <div class="wrap">
+    <span class="eyebrow">Our Journey</span>
+    <h2 class="title" id="tlTitle">爱情旅程</h2>
+    <p class="sub" id="storyText"></p>
+    <div class="journey">
+      <div class="stage">
+        <div class="frame" id="frame">
+          <div class="ph">
+            <img class="lq" id="jLq" alt="" aria-hidden="true">
+            <img class="ly" id="jImgA" alt="">
+            <img class="ly" id="jImgB" alt="">
+            <div class="cv" id="jCv"></div>
+            <span class="zi">⤢</span>
+          </div>
+          <div class="pcap"><b id="jTitle">—</b><span id="jDate"></span></div>
+        </div>
+        <div class="jbar" id="jBar"></div>
+        <div class="jcount" id="jCount"></div>
+      </div>
+      <div class="tl-wrap">
+        <span class="tl-line" id="tlLine"></span>
+        <div class="tl" id="tl"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p id="foot"></p>
+    <div class="sm" id="footNames"></div>
+  </div>
+</footer>
+
+<canvas id="petals" aria-hidden="true"></canvas>
+
+<div class="lb" id="lb" role="dialog" aria-modal="true">
+  <button class="x" id="lbX" aria-label="关闭">×</button>
+  <button class="nav prev" id="lbPrev" aria-label="上一张">‹</button>
+  <img id="lbImg" alt="">
+  <button class="nav next" id="lbNext" aria-label="下一张">›</button>
+</div>
+
+<audio id="audio" preload="none" loop="false"></audio>
+
+<div class="mfloat" id="mfloat">
+  <div class="mpanel">
+    <div class="mp-head">
+      <div class="t"><b id="mfTitle">—</b><span id="mfArtist"></span></div>
+      <button class="mp-x" id="mfClose" aria-label="收起">⌄</button>
+    </div>
+    <div class="mp-lyric" id="mfLyric"><div style="text-align:center;color:var(--ink-soft);font-size:12px;padding-top:26px">暂无歌词</div></div>
+    <div class="mp-bar" id="mfBar"><i id="mfProg"></i></div>
+    <div class="mp-ctrls">
+      <button id="mfPrev" aria-label="上一首">⏮</button>
+      <button class="main" id="mfPlay" aria-label="播放/暂停">▶</button>
+      <button id="mfNext" aria-label="下一首">⏭</button>
+    </div>
+  </div>
+  <button class="mfab idle" id="mfFab" aria-label="打开音乐播放器">♫</button>
+</div>
+
+<script>
+const DATA = {"title":"程濛厚爱","subtitle":"记录我们的爱情故事","footer":"© 2026 程濛厚爱 - 记录我们的美好时光","primary":"#fb7185","secondary":"#c4b5fd","hero":"/media/hero.webp","heroMobile":"/media/hero-m.webp","name1":"地球炒蛋","name2":"星星泡面","description":"始于心动，终于白首","story":"在那个樱花盛开的季节，我们相遇了。从那一刻起，我们的人生交织在一起，共同书写着属于我们的爱情故事。","togetherDate":"2023-07-28","anniversaryDate":"2024-02-14","countdownTitle":"我们在一起已经","galleryTitle":"甜蜜瞬间","timelineTitle":"爱情旅程","photos":[{"src":"/media/photos/3_s.webp","full":"/media/photos/3_l.webp","title":"","description":"","lqip":"data:image/webp;base64,UklGRg4BAABXRUJQVlA4IAIBAABwBgCdASoWAB0APpFAmEmlo6IhKAqosBIJYwCdMxgvQTOYW68hBDq8C3Lf8yqKlZgQ3XbxHB5A6RrOOAAA/iHd80+EDEqPKIZ+BOeBggwzGTq61KU/jsaQ0g/qqwQBN9mM/AjhsjManZIUtiVFBw6WokreQInfvKIsOsif3pzKL0QKNmmY7HaGLAIvKfsH/xQ7O5CEEu0OBcFvv788MZhoS9h1LqqKWp5dwCKhu8TSdJ3aLzCu38bU/EMzKXBU+3JS08xFG1q1MsizxuFnapXlmcJpdfaGFjZetrEHmAIBkaIcvQLAjzXP56faw7OIGvVn1Fj+nN8PAXQufwbevdb/UAA="},{"src":"/media/photos/12_s.webp","full":"/media/photos/12_l.webp","title":"","description":"","lqip":"data:image/webp;base64,UklGRnQBAABXRUJQVlA4IGgBAAAQBwCdASoWABYAPpE8m0kloyKhKAqosBIJbACdMuIuwIBz1Vkpkqo8ixB45F9Z3OZc3fpSWqZq8AHBqykBerDkuAD+7SfFhofgy7llgCDsfXpjewdwXBBfu/WGX1F/iK2aqH+4PiYXAmxTMwv6+Upivu8W/SQ2+e3YuMns3UcNVvKhcdJWUIxtpqxtQK28TIFGGteBsjU3wNhds/pXJhnkfKn6C1NSuXvNnXlzTj+yklBML+A/PrTGP0G/X4r/6Pb7ZXJRu8HZH+KU9H6vApXX9bsGeSOupd31siErYeScWH8jdC+md2F06w/F+HUPnBCmJnQ6mSRxYIXSESWndMzyOflTbCtNt83HoiJIY89bfjrSlQGxk5DyuxJMVuFwjSgHPpdewSDEG5Dg4tcuI2+TY1+77QviPYcetMaM6ABg4ckkg/STIhD7dI1btwqHrQC6y+Fb2fKxqTC26S/g4ZqXnPnvuPJdMAA="},{"src":"/media/photos/1_s.webp","full":"/media/photos/1_l.webp","title":"","description":"","lqip":"data:image/webp;base64,UklGRpgBAABXRUJQVlA4IIwBAABQCACdASoWACcAPpFAl0klo6GhKrgMALASCUAVhnaQzvh8P8jCX0i6IrmuU0FjRHDToRJe4DKFSxzVvZKABWv16luHDc90nr8MCAAA/vopih57m27npawEWWxB9SKW5eGqOQO+wyjtLvYvuiey+T/Iaet6ELBLbxlF/NK4DM41qGhpRbuIjf0bYzeyGpZHx+NThnMLarvVS4A1rWT/HK1RMO1q5hfTF+KURtfkPgN7IwV+BxTlN92AbtkCtuZYd8jTStC+I5DyzsW2D6t0/KK/7VkoCjj3ol6bIoAeh1S6NZouUAY6bk/IdzJPB+IIvW7BK0lC+VIEqwIg4O+QpnsuasuWuKP3Oqflxewxn2CGWGniBC8tsUxJjVvweYo5gqVpc2+JKl8CHyEYz3YYPtHYFUQHD9NlVj3eoD8vTpVl7Da8XXcsQ2ucCcAWLy9nqAyGhrr7aorx9/W8PXggcxkCocgGIiH3az2zcc9mN/3fg6q0lDtDFzh6v4a9jasqvP/rdcb2uOH4n3AAAAA="},{"src":"/media/photos/2_s.webp","full":"/media/photos/2_l.webp","title":"","description":"","lqip":"data:image/webp;base64,UklGRtoAAABXRUJQVlA4IM4AAABwBQCdASoWABEAPpFCm0olo6IhqAgAsBIJYwCxHyS20+ga1UK0Zy5Usj2Dd50o91LlhjNAAM32uOMwvO+qaQJiuEMs7NtgV8hITT6jcu5X/50j8vrj+voLI/RsULQtGvCjJBdJ6y/VtGFfRZHM0vH4CU7nK88Wgw8OllZQqmhqzwRzjeRU0rlFOiaHeCcEZH0DD71U16ormusf8L43vYL1ZvrM+NyyOpQN4i1r3UdzxPJcGlXdZHSrG3itAN7LgWZS99YqnZ1eAKoTqAAAAA=="},{"src":"/media/photos/4_s.webp","full":"/media/photos/4_l.webp","title":"","description":"","lqip":"data:image/webp;base64,UklGRioBAABXRUJQVlA4IB4BAACQBgCdASoWABYAPpFCm0olo6IhqAgAsBIJZgCdMoR1ZzQIS7zB/3SK7C39Hap1WwJnwLEYFBUMfOMQAc8AAP7sVAuQGHKCm3wt5DRLW9N8N2sHIN/5rmSg9kUMXg8EaCtQw+dDsMQDE/22EiJZgaB1xUY7qqQMBFBm9DQCQVUwwLzSUb3PDEeAroRGauL8auNHzOwFalj+CI8qjrae3vv7n5x/axst47zQim3/0XTSnKVxReXoryMHoVnpHhDZIIpFR/p62loqNJUVUlKKDE7WbgYQsLx74vrGembH/mXz6aRdAP3xSDjnU4Ns1M+ERVNK9oFa+f45QPE2ZXfTE0vXIyrE3gbO2ENm0CNalgJl8HMxdx494Uqtkfn4iAAA"},{"src":"/media/photos/11_s.webp","full":"/media/photos/11_l.webp","title":"","description":"","lqip":"data:image/webp;base64,UklGRhQBAABXRUJQVlA4IAgBAAAwBgCdASoWABYAPpE+mkkloyKhKAqosBIJaACsMzIYAIHoLL4/nJF/d9cLx/YjnWeE1MeS7nQZE44AAP71+fXX1Yh2uO9hisgHjTV/LQHS8N8hkrclmayviwp8N8XTTNOc0YiLPzcCIpS88eZY4g2/uoAQ1P/u9gGXvRaLIvADAG/eM3xXrYjfwJpXqXQWjM/Eo7m0RYDYG+CZANrztuV+MVCHaBWtWdh+xrJjZ/iXLGcipC+X8xfnP4cWrx/8pbWCI8z2H4qtL0dE2ReTSCA0BrG26BQgw6CNjyGDqrFjPv3TGL4bXj+aMp76yTv4faAmjofTYxVQxrOXnrIV0RDxRxA2QBgAAAA="},{"src":"/media/photos/14_s.webp","full":"/media/photos/14_l.webp","title":"","description":"","lqip":"data:image/webp;base64,UklGRuYAAABXRUJQVlA4INoAAADQBQCdASoWABEAPpE+mkkloyKhKAqosBIJbACdMoR6eKv20AVfwOzhYCY6Ivgdk9815F7h6wYAAP75KecIxtu2VVy47MHVj5HvoU66Y2p4hcXoafJoy/UseRX+M6vtou2B54pIHuKxRqybXrHJ/6SX2rxuysgtv2Ps9rYSarDiFdfMdeyUuMs8iMfMpN66+nqjjqLhqE/5jsS9JRP8aUYRM0WruIlo7FteBlhcfsjcmXMx/DwbL6vl1DFIGAC7XL7UUOW2DqKZTjTiBqRLLQFoITbV3Cv58/DkAA=="},{"src":"/media/photos/15_s.webp","full":"/media/photos/15_l.webp","title":"","description":"","lqip":"data:image/webp;base64,UklGRgwBAABXRUJQVlA4IAABAAAQBgCdASoWAB0APpFCnEolo6KhqAgAsBIJZQDJEdz5fDNf/lUhdcB1vFFmX9DrTUMRwyAep/TR9PwA/cPySZh8jHfz9gbp+R06/7W3A/2YDDxt1hYT4y1GHknvMUMAM17nNB8evp+FdFomXnyPh9ZLS0sOgMXsnztRNapc63VH6gaa/q5BorySFN8lWeTjeHdF72LhD3TYa/4d7TkXLkyBU0XTZbRijurJ4ya8EZyWeYIxK221m39Fesl0HxPtErs+Oq6WZl27mRcML/5FEdHbRDPND5UawGC7PG/pxvTGu1u51wJWh/R8tF2YccylJj6cydjypcJNXjTSSyjwJgAA"},{"src":"/media/photos/13_s.webp","full":"/media/photos/13_l.webp","title":"","description":"","lqip":"data:image/webp;base64,UklGRlIBAABXRUJQVlA4IEYBAAAQBwCdASoWAB0APpE6mkkloyKhMBgIALASCUAWI/Jn6niX2Bb+pqfrX68l6Ad2Czo4wncUbrV+ubYtTqMtmotfQAD+8RRy/kh/MrNF1n1FFB5Phs95DAj4bsMPB4Y/8LlJID3zz6AJMP0LW4ZVizkMnYEvRtP1TAHvXpPiEUyAD4Nm/Lh427VKjNBY3IvZ+CzG5HEhBcvJGRtYLcHXIuOgbybbxX8fzOm1OHIz5xbIgXNO2yUeZE0Z1UPkC/rH+HhO9x8rgInDDsrK6V0N0pYwwsKM/3dE1U3Eoln41q5J/PBVyG9vy2NkmujhTp4G1YL7ZH5uM3gvSxvhDBvC/r+X5gxnu9VU368i+mzD/zYwFRGXplhw+vSJGXzmluS/A4VU7Bhfq+u8DabZvQMD1pw9kfY9y/araivsR5xxL+EtllX3JQAAAA=="},{"src":"/media/photos/5_s.webp","full":"/media/photos/5_l.webp","title":"","description":"","lqip":"data:image/webp;base64,UklGRh4BAABXRUJQVlA4IBIBAACwBQCdASoWABEAPpFAmUmlo6IhKAqosBIJQBOmWZQSTtGjl/sAZUy+vbwW6RPD5GhViFJVObgA/vS+vMi2T8PXzwdzudFTQphTJZPvl4Lp/7fKYsnQE757R263HTF0jlIq8r3K/Te+VBa+JBv0+4oPI8LDVM9tvFOxyITzVkkZuhTwE0iTObKPUN99MnZo7oHw+lffsWVVlpNAxeg8/Lff/kIiAW0r14F8CioZA+9XFF2H/qKe/1et1MKCH0/TUQHX2hjC674a76SaqdgNn7EMVJZjVA6wTtCSpP+cyymDj/ubEOHSc73f/LutFoDnrR04HzcsR+TtYL6wm3xAzJWnAF5vH1MpV9lSP7FD+ZXG9YAA"},{"src":"/media/photos/6_s.webp","full":"/media/photos/6_l.webp","title":"","description":"","lqip":"data:image/webp;base64,UklGRtoAAABXRUJQVlA4IM4AAADQBACdASoWAAwAPpE6l0eloyIhMAgAsBIJZgCdL14UAIKQUDPLibFCDp6sFnRUAAD+2G+DjKEff3f2Qgch/G2YKNbx5FV4I7xfEcHtaNERDWQmF8lod8h8D8GIu9Cb8Y6vMy9z+PgAQVfKBzq3VJb8P/YEQZADhz1kYNdo2mG2y3npraFP2+wlbWoG1zZZ8M0D36/b4ra4RXG6u7pHsRVEM7gUGhdQH2qgn36eOR9OrIo/VSB1/oA9Y6KsH2ZvKlRtenH+bhD59dH+DZ6OAA=="},{"src":"/media/photos/8_s.webp","full":"/media/photos/8_l.webp","title":"","description":"","lqip":"data:image/webp;base64,UklGRq4BAABXRUJQVlA4IKIBAAAQBwCdASoWABoAPpFAmUmlo6IhKAqosBIJYgCdMoMYLKBz251Fbx174ZWfpU7Yw/2DjsLoby3aYx2RnQnCjZH0AAD+7xYBlmIuP6of/7qCT+43AVCPFFCr8XxwEkZK7/Anl5kilYaL8+6IwvNSrxnra4gN7fa9Op18yZH10/ky0Dm1ChLq/9ylcYqrZtkgfh7bld2GzoSOjcNZXFvuO/tNhzSU/JrGl0rPu/fVswLnqY371+S63/v8DxFfVb+P331CZZ+1wAQbe4w1w5fCO5+yNMG+AV77FZ/tYdKtMr3vdX/c0KrepFMb2Tnp52D94ZVFTOLlZHZoFTiOVZLZVHInIMWh08WflJKc2o7Ea5ZsdJqheyILox2Y7kYW/4EoS9tBRc5XpaE/Ppu/wVc/FzIK1xLUvFbu+y5tJz9FdmXzwzAox6eHObGtQYYNQPU4xbBpPDbiALfxSKozViUq8wZTl+b/xsR1w8Sv+xi9Dy6F32a7Z4NkoWk+B1klN7irjnPdyxQIT9FAl0Ob03WRi/iRZgakC+22x1j1t+XbOLezQgAA"},{"src":"/media/photos/10_s.webp","full":"/media/photos/10_l.webp","title":"","description":"","lqip":"data:image/webp;base64,UklGRnABAABXRUJQVlA4IGQBAAAQBgCdASoWAB0APpE+m0kloyKhKAqosBIJYwC3vreLOqOgtkIUmmkwb8FR0lTcgDLLDUS+RLKqYAAA/veIWljWluw6BPH1T6hwdQmfHkqXCqVB9dvnbrp+SBm2M5AdfkOTvbBp1a9F1Ohv9XDylSX36+aKuq81paZBSv1oxMpS8hIm2Ga7jRf23N89GNRUWC/OXi3tu9RAC12/ixViGtod9DOMS/ksLIz7hFC8v89ZhfH+T967PVlj/geZZCrKnG0xZwVJtwxfiKtuqO8QB52Zr6storvNNtY9z4gEhwqB+K/qTW6G62oYsHVSvDu9Gs/eCGKqsEcRAb89qGN1oNX1+T1dvNKvTtpBm5h+Su3revA7hSyUpdBE0n+HRRKtJMeSeK5kGNDxU0oB0fNMkzfkywE3Ugx7Y9eoHZiCB1qhWW9xknlOmggyNzo2t8JysyNPwLEAEeJ9XzN9/atcaG68TQAAAA=="},{"src":"/media/photos/9_s.webp","full":"/media/photos/9_l.webp","title":"","description":"","lqip":"data:image/webp;base64,UklGRgYCAABXRUJQVlA4IPoBAABwCQCdASoWADEAPpFAmEklo6IhKAwAsBIJZgC2+4nAKTFqo56pjLG4N8DS9NCE2exfxwEWPUbrmVAqA5Y3cpfp7GmSVu1Iv+yb4a3Mi6aB2Yvf/0AA/vXQYAV5KX26Jgkjptr4YCa6IwDoCz7lCQFZEJsLQIMjouqkNYYTTkC7yj6GeCARA7+8Xj7ZmAshP/angJwRmKE/oVN5ZLcItH/M0TvGPas0shyKwkEtBu9ME5DG5LiWjjiTWByL2sFcZ8nTQNBQHi9uBAsQlcMb7MwhSKSM3+tTFoRdFb0v6eP2jAgx73JtH7oz1Td+bEpFDYRwdXPKDM/lFNnpv74cuuNd8eEa16I80UDav3P6e0bz5mw36vDyhnP2gNGsTo9xlUs/ydSNP39U8DX60bvz/UfsIxalkvdn8kcP9wTJHJYh7ipVQuZHFosbCC41TjsrH4LPzODGl4j5lF80FlMo4t5rbCHwOjlUuOGFfeaBoaOXgLJIGMB+8tLpZtQtxeP9QP7BIokvlkYTMJPnlWs+dxtZ7JIU9i8gXQpqxDZcH+pvquEF1jsoa48kMC/VSdIwCDHQcg5FxlAL1O2Swe1TdtHe9NZfp3mZZPn19hHXpaUAVGW8gs4ypNkq7ScjDyopEtuwF+FHRcgWwc4zZPZsGF8ov62tYgAKOukAAA=="},{"src":"/media/photos/1784642450080_ik8msthlt_s.webp","full":"/media/photos/1784642450080_ik8msthlt_l.webp","title":"","description":"","lqip":"data:image/webp;base64,UklGRsoAAABXRUJQVlA4IL4AAABQBACdASoWAA4APpE4l0eloyIhMAgAsBIJQBOmUABlPJnNzjUm79nSZIOAAP7zlLsVA7lYgUg0Gk+l25308fHuL/06l7QD8N5eX1+1C7Pxe3DRayNVmfpcAL6SkbZeoQtFXISIa2CqR11YShILcoSy6VpnI3GqMGJ4sLOwSOqXNwrpM84rF7aLAJi8lyGmz/2CuN6z9pYfta3bC/zW3Muv/mA9ihj1PQi0QIHtgqjfbtuDO5+haaI1AVNCAAAA"},{"src":"/media/photos/1784645534101_h0f0xfb6p_s.webp","full":"/media/photos/1784645534101_h0f0xfb6p_l.webp","title":"","description":"","lqip":"data:image/webp;base64,UklGRnoBAABXRUJQVlA4IG4BAADwBwCdASoWACEAPo04l0elIyIhKq34oBGJaACxHzQ/qtVxWmmVviZ1TCvJYRqj9sUazaNDePx9+fIY5hjgnwgh/344PB8llAAAzKMmFtd7SCLR+G1oNUkTdEEgE81vOYmRqNDhjN7uUR88cSbeofGp6O7vFfogY9qrKYvD1E2pxmT1OAlyr//kZypulC0V30KjuPb3+ey3AODKjN33tiYQxS3i/zmZWL3apC3FM8qzKuILALt+d89UHMLv/BOyMP/wTtpnapGf4u74rC6lBcb6bQWGh2Uz0ZZhaAhiEfL7LHLnz4MVlVh+TzTwP8A1Q78HQeQDUYE/CEwTDX9F58QJetjpAnb50JIkJCkIOAnS7dZiI/AKtX7OR6d/rjNtSrbunsBGHsGf1w/4OW/AlS6FBufg0r8aXfa3501PoCkIwdZp0OFZE/wIe+h/oanp/ofxX3g3Zk3X82rE1bbxXaq+OSPy+DQN3nJyOUIAAAA="},{"src":"/media/photos/1784857610853_5k4vq3hpc_s.webp","full":"/media/photos/1784857610853_5k4vq3hpc_l.webp","title":"","description":"","lqip":"data:image/webp;base64,UklGRo4BAABXRUJQVlA4IIIBAADQBwCdASoWACcAPpE8lkelo6IhKq34sBIJQBYj2OCk83a4Nn0LdXTpqAEJQH4MFeQMvmoH/vbwE/CW42Bt/zqeMjK83dUcAAD+8jhLim7a5XWzVn98j51zUc3nhm+c0uySpzqWrBNk6fKVP5+HJiZSRn56ScPTYDqnHelERH+FqsU2EzZG3XfeDfH/c+IDvL6vabsZkbm5mBlj5AwWhh7xBz/zThT257kMTXfjzaTL6l9qTh7TIsr5pYGwy++RZSZTB0loRKhsq/BB7EhEd7V92+B6uyP2Hd7UfqKVJNp7CS73u7EBfQgEtXtYpZyRE+qlSkdBx1AHWXsQskZRV1aYv/r/3gi0bgDRuB4OdWxXQvhDwtpWHaIuZn8SA1XyGPdNvYW+9+5e9GZfd3SAWZVBbb3L+M6H0S1sd2Skkl7YEEs46iOeJt99heXiFXh0EriTov/7Kaj40Nge22e1gYFTgwvQ5paUyTEFM+chnsIdnQitx9a4sddPpAT1nc/JBgAAAA=="},{"src":"/media/photos/1784857650534_pqdfwjj6u_s.webp","full":"/media/photos/1784857650534_pqdfwjj6u_l.webp","title":"","description":"","lqip":"data:image/webp;base64,UklGRqQBAABXRUJQVlA4IJgBAADwBwCdASoWACcAPpFEnEqlo6KhpWmYsBIJQBOmZJcGdKOf+jAlZTdWHd6spdLDLk6OgdcvKeJ4Vt48qX3/vcV5/vABo0OlvAAA/rOsgYGBIOP8X/lTK4MJ/oCYlUEv4vtge/62ufPhtcTEM9EQQjNWrKcszVKNnqrMvx3BvIq/LhlTHyN6TDBiDN7GYyfSIEq2trBRbLNp3xh+3ZkIhfluXnlmju+3mqOx/LkFF8Rh/GXdqbdP4xVKDC5NxqpeW9P/36XcHoEDFH/+JGNuvCG3Asx/4ejbhOSvj/Z+U9gh6ICNRiWlA3lVtj4odioJaJftnSXbiPbKsnPA0ZVAMpVtN/l2JHhSBxvPjcWANsxtTGcm/bM01C7vleetc3XDFyBwce5ME/8PSZvRDpRbP06JPDcG8/lzCPLI36t8JWGiodc6e0kK3XGXt02q1pGoFYdezaCqgNefAHrW9nO2KtYPatIj8XNwtBE3140aM6gha5ucPG1YpWo5/CimhBPWbDQQalGP3rpOuwYv6Nsv5CavgIDIhljAAAA="},{"src":"/media/photos/7_s.webp","full":"/media/photos/7_l.webp","title":"","description":"","lqip":"data:image/webp;base64,UklGRl4BAABXRUJQVlA4IFIBAABwBwCdASoWABYAPpE+mUmloyIhKAqosBIJbACdMoR5n6bcrsM7eq6P/SyfZ9Ii8Mva0GGhvf0qaJ+CeoAOIz4dXjHnAAD6nh2U2tOPGjZ/M6EKj4qP/6MXVyILIpJvb0l6QOJFpl3V2tuZZP/8ubzk8dpOevPMx319DhsPkT2nmsGxa3/3ngnEqHZ7XKu35twB2sIj7/eYkKlXuDgFB6moHhgzo5vroX/gzAzYqxUaaOoT6J/I+SY1pqEklbLBfrAYLzmCZ/+rDfXjPlJQ0OapyqPH1tUc/e/8hc/lTup36N1cNq7gf/1x+dE59uAf8Yrv/s6hrfFJpezVsA9w99eGX0l+R3aOSRilxulLtGXDpD6b/XrztnrkXB4TM2yoJUi1pU27NPn7Ji6HtbJGwndYBq/1Gmp4x9GC5RP6n3+k6/4rv2LI0rht9xHbbT56pBzeAA=="},{"src":"/media/photos/16_s.webp","full":"/media/photos/16_l.webp","title":"","description":"","lqip":"data:image/webp;base64,UklGRkIBAABXRUJQVlA4IDYBAABQBgCdASoWABEAPpFCm0olo6IhqAgAsBIJYwCsEcAZIAyrqrg55f0kNGOwo/kItUSmofqlGu7jj32CAAD+0rw2ix5iTbD6c75zj1+e+eRmPwIo59zPpp2PZZGfOW+/v3TEU5NTY0buNwuGHvn7kO6tIaF3lh11BBgvrbdaY7eSV42xt9sVHN3eSLsY81ejGli91px763ScPdaecxPP7DiuS9y86Usrlw3/xKFooAKOR2VocPK/wfFm5qCD8ZN+Yf9d1mGI7P/288YTNzONwdIXKvupe3FBwHPofN43j1D8/Pz4gPzsuNXgJUlwdT6cY73Q/LLff/9lWghJHDpu6AxoC82j64A/rfkh+fUfD3gX5Osb3zGTLJUFWYhntN7xxljihHnj2kLlnsrYWwEhvBvyTtzpL+AA"},{"src":"/media/photos/17_s.webp","full":"/media/photos/17_l.webp","title":"","description":"","lqip":"data:image/webp;base64,UklGRrYBAABXRUJQVlA4IKoBAADwBwCdASoWAB0APpE8mUiloyKhMBgIALASCWwAnTKEgQjUta1K1b1boMYGz2/R5LIWEn8f6YEI38XFNRv3nbXMa/Fmuz7BcgAA/uhKE/bOaASLp/gbxcqhJMnFjw0SN9N4iPpb6l78AyEOzeMv204muLen3FzZqooINWrhmvsrQQb1elqqo8tfv3e5JArGepBXks6YdkgmthE69fslVnNcfqxFWvfk2kyVALtkyByIsHzCWgmX/zV4YhbiHuTJ6dH85qrfjDUJfTxhmVqECKQnjP2nKWAw688uORHPeS+C3I6DlOwAuR09gar8EdDACutXqP8P/HgJ/mzajng7X+vagVqAka4AZrfVPN46TfBmjNw7VAo1sKTR3URb0xPXv29tEQupKr9dn2cOe8Oz1k/RDaaIeJHyihAt23b6rFwHACGW7OT4QXcKLcJzdRa+fPXQRrL7YVvX2semc9ta6AI/1oatcbUHvQHb6mb/vJSZ9pK0uHJTTvUfJP3xZ/mu3+jprtDq9LIXn5maCnAaqPn2GCpsIa4OP1Z87m/rd1d4KlpQicqf1IIAAAA="},{"src":"/media/photos/18_s.webp","full":"/media/photos/18_l.webp","title":"","description":"","lqip":"data:image/webp;base64,UklGRmQBAABXRUJQVlA4IFgBAABwBwCdASoWACEAPpFAm0olo6IhpWswsBIJbACdMoRz0QAu11QAROZBnx016X5PG43flUQ+ZnsKAOkWM56AL2unlKTNAAD+/VWCROrewUj2+Cr8x6xcMUL/yHFspsXUliF3oLXLBaRwPDd8eKezsJc46LXYDKyjChtO+WvH03x/pROLVra9z6GS+M73kTQN3c48uszfN9nJSAQjtpVgFdj8u7ZhVajiAmzRlgWgtCzaXBTpNndLs5/Xe/nUDiv7ONqedBSDcvFiHdnXlPmcoNts8Rr0ncU1kgwHn5DS7xbJlpiX5kGP7y56nQUpMzn0Cux1TPUE833ffEoJgzbABTNcVJ5oCaNmKxmjRAsIjE0iA/QEpJnkxdUzbdpcOV7KLXB1rw34kM+GOTu2Zq2wbAMDZLYqT50ch+uRCty58i/Cg/VGl0rYA9qxoxEfHDhQRXTbBIH4RUAAAA=="},{"src":"/media/photos/20_s.webp","full":"/media/photos/20_l.webp","title":"","description":"","lqip":"data:image/webp;base64,UklGRv4AAABXRUJQVlA4IPIAAADwBQCdASoWABEAPpFCm0olo6IhqAgAsBIJYwCdMuI1+RmHlGFNt/J3U29F3EwiiTU6rJMXfS7sgAD+6eGnLHRAMSEvbg3JrJF/FN8YzgPz9Wy+ThjlV5MyhdSt9EV5P+r8CgPy9NFMVOztCuV9shL1Hvq+SlH0fBXfs0lySaY7pvT3La8TxZfhEJB8hDIjKMKroTVGDDw5o/+Zg9gcMEUVmOQ6s4zinjHb9S7FR6ihjuTO68GDV6ulXJc1X6u4GMHqOIfBaFZOuBcb45HpXhOShJ2NoGsoa0rjT6QQ0DMfKdHmp1ZUSQqBpaBJsy5rv5AAAA=="},{"src":"/media/photos/21_s.webp","full":"/media/photos/21_l.webp","title":"","description":"","lqip":"data:image/webp;base64,UklGRhgBAABXRUJQVlA4IAwBAAAwBgCdASoWABEAPpE+nEkloyMhKAqosBIJaACdMxx8PszlquCAZIBvMJEWBBGRy304FUkGS0jzSKagAP7ePipWSqHUm4iV72j3jpFLNVPyTvUUsoV/lda8rYzP9q4jsLx9DXYIAvE91TLQ3R4d+ez+LCNkso/wNqDdipyHeSl57zp5yQFe+vAc5c1V5Cfk+kA2ntewVLRSqaYKJ9nbo+KW6s95z9AExexbP34Koa9sRKHN2/SUe+AUUERiEIbgj3911XA7DkUlnSCz/l/tF0TxK7xDTeZEh0A2ZI4gk60bx/+K9wkz4/l84X6oxHlBB1qvUDyuOeTtNyeAbrQH2AntNU6963g12PUeIAAA"},{"src":"/media/photos/22_s.webp","full":"/media/photos/22_l.webp","title":"","description":"","lqip":"data:image/webp;base64,UklGRpgBAABXRUJQVlA4IIwBAACQBwCdASoWACcAPpE8lkelo6IhKq34sBIJZQC9XvJXQEqa70i1dRL1i4REkdpxhX5e2ebKZmwMLOUMgRr9jagLfS/whQAA/sP7+RZON7NGtodGKbcAVGEHSoYeYXj7lUQ0b6K09OP2w8GS9oEiN+lMYdQtLvpAn8/+TMSdar2zL6xrf6RLEOyn9LbS1utgwr2sb3mDF+Xb0GR6a2ghMf5DmRYISI71DAfwWh9MKgl7qaJYVx+IIZ0lponEZncUEt6J1ZX+InepZhcD0effjge40Dy6XD05WbrH8WcSOEV6jkDkc1Wiupkz5H1K0zdmHEwomr0Txvy1m3um4NP4p8HeXxLV2ebsKWrCgcV4n9SrmkVJ3ho+nk5IwbKcsSAmg8+AEBDUy5s+k9mZpbAYDoiLEVgrxOvhtBuQ5zIN4jsb9FTC7KCYz8/FYOMFl7IJmZITlCOLLgvhZ/pvXxEQr1fUk2VvwN5KOPNlu70ZczMY8SA8+80jVWmGt0eFbXBaQkQkNSJK92E8WVyQAAA="},{"src":"/media/photos/23_s.webp","full":"/media/photos/23_l.webp","title":"","description":"","lqip":"data:image/webp;base64,UklGRmIBAABXRUJQVlA4IFYBAACQBgCdASoWAB0APpE+mEglo6IhMBgIALASCWQAnTLeuMPC1cMHbxTF9cs9+q8K43Vahjd8iy9j8TvWkfgoAP74by+Lc31Yt/MlM4XVd3xIAvofdBTZPwwTwu/9gk+JyozWd0YYHkF4u21gSZ2DITkYaHog1eu3HcEHUtfQSIIPn+TlU032PsLa4fpt1XgO622VfUJD0LMhhruDfbu4nmJX++X/JfP5P/GFfReSkGTlnmYU22Og89Y79nV8ghKJMrG7essf8+A1/sQ9/4MuvZGaeH07rW7FDLLVP+3urpIaADR9O3xPA6mX70yXf2647kuDsmmASddjnIxekC+TiMhbJwOLCU9TVmkEMLvAqofR3MvXONl+vzbztBtgJesqomXSu3ObF0rKaA8eZ3vSdd7KZPcRk95XN1qTGh45Ymwt/Gia2Sqvk9O1YL7p+d00bdQjIzuIMAA="},{"src":"/media/photos/24_s.webp","full":"/media/photos/24_l.webp","title":"","description":"","lqip":"data:image/webp;base64,UklGRpIBAABXRUJQVlA4IIYBAAAQCACdASoWAB0APpE6mUiloyKhMBgIALASCWoAnTLVPD+u3N9r2LgMYQKAlds0HyGjCNkrVG5xXbhXZne0UROYTmJZ+RwufMIAAP6Y+dbbHxQOuU/d7BM1YwljgqNU7BjKme7mpggzJ07IZXsGsg+WjYLF47leRrfvg/RR8xCzwqkR14kHEjldGvn89NsdftLm13omA3ZRJsEk78DYNxL4T0HJjwS72s3ryASv8r8LNt982ff8OBQaMSqvHxjnmfl5YIVf2EYb8bNPcl1Tph1Z1rluPy/zjLuVM619T/4+Ag7ylYvYdvIlWWx9A6yMQHWHvgissF2qE/tS//KCynukpBnqu6d+23WBPaAZd1pK6+mSZDzGHa57m4r70+yZAs5o1970dKpSi9Id6t0/3sQ1HszsvdFEzdPXiTaVQfMOE3Chp6vBQk2GhAElCvCxH6/i+M785U2XhHCSZmWsspGmVJSVmgWvq4+5eg+lqXjeijN11zXr7+BMQvJIv9sydq/418DyQAA="},{"src":"/media/photos/25_s.webp","full":"/media/photos/25_l.webp","title":"","description":"","lqip":"data:image/webp;base64,UklGRqwBAABXRUJQVlA4IKABAABwCACdASoWACcAPpFEmkolpCIhqrgIALASCWMArDL5+g+scidWe/FfPwJenikhFNxdRH3esJ4i3ZyLNLsKRwOUOnh+HXnjwyjKSj4AAP7a0/mI6wgWGfYGxPWYiJloicDsk4ZzpXfMwZqR99HBAWzRt6ursWv6iGtudyyld7ORaBu8L5XI+Getw2YmEIch7ciKvfCmTafzv1QhXsMvOAS0Ft6gK8SPfMgOuvxlq/UjFuVEfx17D+mBUiWtikDiiB2uUuoH4O4o+iwuQZRYWK7r7yszOMWGovztegBWYtpYZ9xgwV2NRxsH+hD/zHrab53ZyUMA8MatWAoV4DhCf6JCEZeQ0evMWLo12Q0i6S9wCqjtPbo5aaw3qNZR0TDvM53n3AApQQsnfXJiqdOJ/VCKHgpwbf9V7gIhLRwOtCzQRHBR8iaw8cdD/QfXlqLhw9f+7fc9lBk1tNGnmObwmoMBsPmpz+/sYqhrPW4ZRuU4jxNkkhDswz75RAwn0BZIcTm7et8tBmCCAb2ZYVLuHagkWpOJP1PXFWBDghysSwAAAA=="},{"src":"/media/photos/26_s.webp","full":"/media/photos/26_l.webp","title":"","description":"","lqip":"data:image/webp;base64,UklGRh4BAABXRUJQVlA4IBIBAAAQBgCdASoWAB0APpE6lUeloyIhMBgMALASCUAVhfQCr3KzbMhxYdlTsGPCF9yAI0h0cT27Avm2uoAA/rUWYCZaqXQyLrL/2VfCHeV3F5Orvz0lkOp7i3piO+xnPIDbw3Y41u2NsB1Ts71SSgrf1yjPwFKdcOB4aEbvFAR2C/bqR+CHCFGneipmlVYWaK/TiWyxeb1fkvj8uVHmovdCzq3GgntjXtHdQxOpEDWQJf4qFzHztqMtqeed1rdSO6n1J85aJ7VhxMO+4J0JPocyBvyPaUiQeMqt1Qwf5yDpIA9mqxjj1AHae42y1sEpir6uXgnijd0qSQqS2VmJ3tkxmr+sYiKT6A1J+J3Ziu0PBKs/AAAA"},{"src":"/media/photos/19_s.webp","full":"/media/photos/19_l.webp","title":"","description":"","lqip":"data:image/webp;base64,UklGRsQBAABXRUJQVlA4ILgBAACwCACdASoWAB0APpE+m0kloyKhKAqosBIJQBOmUGZRMsPK+fJ0wCPcfqvKlbrBf59D+wB0VQphY7XqosphmLAtOtpFYvDk4Xkni0k2YoAA/u7vS9d/60wmC69XYsuz9XNBMpkkc66f1Qed/LTVeKfgXp/DV4Wnt5ZRR24vyRgKxXZB26v+QBjXAbY5GUP+pYfN5MEkRa5t58e1uPsCteqgTl7xp+I0NjqQ6vgN7pvvjoCllubPCHPZnGh2PEfPJJxeFX8vswdmAmwLJfxjRboBjNz3kFNeU5Nl5ZSIZvOFaKSc3MV05h39zd99f443/1R77H1Yi/We6Ja1k4kSkzFVE8Dl5CVCu+W01jM8f7OlQrgJXaH6t5eb/umU7g6R9ktYUP+GU106mgXGTEt0INvnRRbJ6jrac/falHr1amsiqdFNC3v0xNeNq68cBylLQUCNnuEsAwAcJGr+h9Hs6ZX1GnZaisShd7s56kLtvthEypJNdLhWH5hslS3m8RjlShjzxlo8Z3fo9r+GMrbsaCg03gOLmeYlObU7B/hAt05VeGm6Hxn843exUP2iB5fJwN6Quj1zYIAAAA=="}],"music":[{"title":"沉香","artist":"张杰-张靓颖","url":"/media/music/沉香.mp3","lyrics":"[0:00] 沉香 (《沉香如屑》电视剧主题曲) - 张杰/张靓颖\n[0:05] 词Lyrics Written by：段思思\n[0:06] 曲Music Composed by：谭旋\n[0:07] 编曲Music Arranged by：钟兴民\n[0:09] 制作人Song Produced by：谭旋\n[0:09] 吉他Guitar by：Mike Mclaughlin\n[0:09] 笛/箫Flute/Xiao by：丁晓逵\n[0:10] 弦乐Strings by：中国爱乐乐团\n[0:10] 第一小提琴First Violin by：刘睿/姜帅/张晗/罗林\n[0:11] 第二小提琴Second Violin by：简蓓/姜璐/莫琦\n[0:11] 中提琴Viola by：毛新光/李纪泽/吴瑞\n[0:12] 大提琴Cello by：关正跃/张集\n[0:12] 谱务Score Produced by：严任佑\n[0:12] 编曲助理Music Arranging Assisted by：钟汉\n[0:13] 人声录音工程师Vocal Recorded by：马涛\n[0:13] 弦乐录音工程师Strings Recorded by：李岳松\n[0:13] 混音/母带工程师Song Mixed/Mastered by：周天澈\n[0:14] 制作发行Produce Company：上海希瓜音乐制作有限公司\n[0:31] 女：\n[0:34] 最涩的回忆 是月落如霜\n[0:38] 满地岁暮枯黄\n[0:41] 为走出一滴泪 吞海饮浪\n[0:45] 执迷于遗忘\n[0:48] 走到从此天各一方 走到你想\n[0:55] 回过头 为我生一妄\n[1:02] 男：\n[1:03] 最绵的缘分在暗夜里藏\n[1:06] 情字罗万象\n[1:09] 寂寞的烫 烫出思念的殇\n[1:13] 一汪碎月亮\n[1:17] 洗尽纤尘仍有 你依稀模样\n[1:24] 轮转中 惟此念疯长\n[1:29] 女：\n[1:30] 你是繁花人间一场落花风\n[1:34] 平添一池落花冢\n[1:38] 看破红尘的眼 红不红\n[1:43] 男：\n[1:44] 你是遥遥天上一捧秋月溶\n[1:48] 只敢萧瑟 不敢浓\n[1:52] 合：\n[1:52] 梦中梦中 有良人与共\n[2:12] 女：\n[2:13] 我见尘世苦短 情丝苦长\n[2:17] 多情人不自量\n[2:20] 我见良夜荒芜 良夜见我\n[2:24] 余恨锁池塘\n[2:27] 风卷一尺 花开一丈 忘川无忘\n[2:34] 不拆散 人对对双双\n[2:41] 男：\n[2:41] 错将一世心动 裁成了谎\n[2:45] 披风雪一裳\n[2:48] 缘分让千秋 在秋千里荡\n[2:52] 当地老天荒\n[2:55] 从此由着悲欢 曲折过手掌\n[3:02] 用来世 疗愈我的盲\n[3:08] 女：\n[3:09] 你是繁花人间一场落花风\n[3:13] 平添一池落花冢\n[3:16] 看破红尘的眼 红不红\n[3:22] 男：\n[3:23] 你是遥遥天上一捧秋月溶\n[3:27] 只敢萧瑟 不敢浓\n[3:30] 合：\n[3:31] 梦中梦中 有良人与共\n[3:50] 合：\n[3:51] 与君别后 云上瓦下春与秋\n[3:55] 山海无路 剜心舟\n[3:59] 欲别还休 几世都不够\n[4:05] 情根未朽 烟火岸上有白首\n[4:09] 一棹天涯熬红豆\n[4:13] 去到人间锦绣 好时候\n[4:20] 菡萏再开 人厮守\n"}],"timeline":[{"date":"2023-07-28","title":"确认关系","description":"我们在一起啦","photoGi":2},{"date":"2023-10-23","title":"过生日","description":"吃小蛋糕喽","photoGi":3},{"date":"2024-02-28","title":"Citywalk","description":"半夜一起压马路","photoGi":0},{"date":"2024-02-28","title":"糖葫芦","description":"还挺甜的","photoGi":4},{"date":"2024-03-02","title":"3D版光头强","description":"强哥夯爆啦","photoGi":9},{"date":"2024-03-02","title":"狗咖","description":"小柴还会wink","photoGi":10},{"date":"2024-03-02","title":"大草莓","description":"个头不大，还挺好吃","photoGi":18},{"date":"2024-03-21","title":"吃点好的","description":"天冷就得吃点热乎的","photoGi":11},{"date":"2024-05-02","title":"我在北京","description":"被商城里的香水味儿熏出来了","photoGi":13},{"date":"2024-05-23","title":"毕业快乐","description":"公主毕业啦","photoGi":12},{"date":"2024-06-06","title":"battle到老","description":"新对戒漂亮吧","photoGi":5},{"date":"2024-06-07","title":"一起逛超市","description":"吃吃喝喝玩玩逛逛","photoGi":1},{"date":"2024-07-12","title":"大连","description":"来海边溜溜弯","photoGi":8},{"date":"2024-07-13","title":"看小沈阳演唱会","description":"谁能火过09年的小沈阳啊","photoGi":6},{"date":"2024-07-13","title":"抱着我的宝贝","description":"出租车大哥：抱着多累啊，打车走吧","photoGi":7},{"date":"2024-07-28","title":"一周年","description":"程濛厚爱","photoGi":19},{"date":"2024-08-10","title":"看张杰演唱会","description":"杰哥演唱会七夕专场","photoGi":20},{"date":"2025-01-02","title":"主角演绎成","description":"老婆美爆了","photoGi":21},{"date":"2025-01-04","title":"滑雪","description":"俩菜鸟初级赛道滑一天","photoGi":29},{"date":"2025-07-28","title":"两周年","description":"程濛厚爱","photoGi":22},{"date":"2025-10-05","title":"见到张靓颖了","description":"能不能多来北方演出啊","photoGi":23},{"date":"2025-10-07","title":"星星酱登场","description":"我有大姑娘了","photoGi":24},{"date":"2026-03-01","title":"沈阳故宫","description":"老铁，不服来战","photoGi":25},{"date":"2026-03-28","title":"二刷张杰","description":"舞台好高级，还有小火车","photoGi":26},{"date":"2026-04-05","title":"魔丸派派","description":"要二胎了，姐俩还挺和谐","photoGi":27},{"date":"2026-07-29","title":"全家福","description":"一个灵珠，一个魔丸","photoGi":28}],"heroLqip":"data:image/webp;base64,UklGRsoAAABXRUJQVlA4IL4AAACwBACdASoWAA4APpE4l0eloyIhMAgAsBIJQBOmUI8DwkwbOe2FUsVUWf+2xGZAAP7zlLmhJht9JjCONUyDh7ft28G+f/TqXtAPoqVwgnzjQmmTy+VganC7cVTJWyUywRllIumq5CMjXGTxKXMikNWN8bMQ9ATaQNQ6Pz9hvf0FjBSY8T61sr9TvbgibaCmFH/2CrZNB6KfAdkcLC9jOTXk/5gPYoY9T0CMoNfOnPHsEKQTt2MRL9bpW61AgAAA","heroMobileLqip":"data:image/webp;base64,UklGRqIBAABXRUJQVlA4IJYBAACwBwCdASoWACcAPpFEm0qlo6IhpWmYsBIJQBOmbhfr9Y1WBKxW64O71Y+FWO49Xq8YFsqjEjtPqhnA2B6TlawochhZcuAAAP6zp3ALCO0X4wC8GwWpX/oFvCFeMSPUKC/5QG2fwN1MZEIJp80RGTsQpRIScwYD4J92EoN5oCmrpwt1Dt2bpX6mXLhO8xwHWJjcJ/W9DCUf3ZnpNN0++1uS2YvbzVHY/lwgVQP5E5MN6126C/ZQ2YY8P3CXTJ5YBSSDA6SqB/DCN78Yq2Ctnrv01wfiHX6W8uhbxTBG4xl5LAPq/1d51lKtLWYV2UfmWmgyi/jonxu0OSx/7mqTCTzhSTLkC/gJ0L+TfBWns8sUsztHYBi7ey+zk06N0lJ6Xf3YyMaZ7/vlxdtiSWx2/fIdKpl4fZiTE/PxuqGNM8td6Kn1wtZrvywWOYEBvYII69JWPbbuL/KT7fNvGF3R1UCHPmOa6nAUHqej2M7OtULXvdmsRMJ3idT3piwFxbq3/OOnYqEMlxJVDib4xMmotelWCfW5wAAA"};
+
+/* 开场加载动画：首访 2.4s，二访 400ms；减动效直接跳过 */
+(function () {
+  const ld = document.getElementById("loader");
+  if (!ld) return;
+  const tEl = document.getElementById("ldTitle");
+  if (tEl) tEl.textContent = DATA.title || "";
+  let dur = 2400;
+  try {
+    if (sessionStorage.getItem("lv_seen")) dur = 400;
+    else setTimeout(() => { try { sessionStorage.setItem("lv_seen", "1"); } catch (e) {} }, 300);
+  } catch (e) {}
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) dur = 0;
+  dur = Math.min(dur, 4000);
+  if (dur > 0) document.documentElement.classList.add("hold");
+  const kill = () => {
+    document.documentElement.classList.remove("hold");
+    ld.classList.add("done");
+    setTimeout(() => ld.remove(), 700);
+  };
+  if (dur === 0) kill();
+  else setTimeout(kill, dur);
+})();
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+/* 主题色 */
+if (DATA.primary) document.documentElement.style.setProperty("--primary", DATA.primary);
+if (DATA.secondary) document.documentElement.style.setProperty("--secondary", DATA.secondary);
+
+/* 文案 */
+document.title = DATA.title || "我们的小站";
+$("#n1").textContent = DATA.name1 || "你";
+$("#n2").textContent = DATA.name2 || "我";
+$("#brand").textContent = DATA.title || "我们的小站";
+$("#lead").textContent = DATA.description || "";
+$("#storyText").textContent = DATA.story || "";
+$("#tlTitle").textContent = DATA.timelineTitle || "爱情旅程";
+$("#foot").textContent = DATA.footer || "";
+$("#footNames").textContent = (DATA.name1 && DATA.name2) ? DATA.name1 + " & " + DATA.name2 : "";
+const meta = document.querySelector('meta[name="description"]');
+if (meta) meta.content = (DATA.title || "") + " · " + (DATA.subtitle || "");
+
+/* hero 背景（带模糊占位） */
+(function () {
+  const bg = $("#heroBg");
+  const lq = (innerWidth <= 720 && DATA.heroMobileLqip) ? DATA.heroMobileLqip : DATA.heroLqip;
+  if (lq) bg.style.background = `url("${lq}") center/cover no-repeat`;
+  if (DATA.hero) {
+    const img = new Image();
+    img.src = DATA.hero; img.alt = ""; img.fetchPriority = "high"; img.decoding = "async";
+    img.onload = () => { bg.style.backgroundImage = "none"; };
+    bg.appendChild(img);
+    if (DATA.heroMobile && DATA.heroMobile !== DATA.hero) {
+      const s = document.createElement("source");
+      s.media = "(max-width:720px)"; s.srcset = DATA.heroMobile;
+      const pic = document.createElement("picture");
+      bg.replaceChildren(pic); pic.appendChild(s); pic.appendChild(img);
+    }
+  } else {
+    document.querySelector(".hero").classList.add("noimg");
+  }
+})();
+
+/* 名字逐字浮现 */
+(function () {
+  const split = (el, base) => {
+    const chars = [...(el.textContent || "")];
+    el.textContent = "";
+    chars.forEach((c, i) => {
+      const s = document.createElement("span");
+      s.className = "ch";
+      s.textContent = c;
+      s.style.animationDelay = (base + i * 0.07).toFixed(2) + "s";
+      el.appendChild(s);
+    });
+  };
+  split($("#n1"), 0.3);
+  split($("#n2"), 0.42);
+})();
+
+/* 漂浮爱心 */
+(function () {
+  const box = $("#hearts");
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  let h = "";
+  for (let i = 0; i < 9; i++) {
+    h += `<i style="left:${(i * 11.3 + 4) % 96}%;animation-delay:${(i * 1.7).toFixed(1)}s;font-size:${12 + (i % 4) * 6}px">${["♡","❤","✦"][i % 3]}</i>`;
+  }
+  box.innerHTML = h;
+})();
+
+/* 计时器：年 / 月 / 日 */
+(function () {
+  const start = DATA.togetherDate ? new Date(DATA.togetherDate + "T00:00:00") : null;
+  const clock = $("#clock"), note = document.querySelector(".clock-note");
+  if (!start || isNaN(start)) { clock.style.display = "none"; if (note) note.style.display = "none"; $("#badge").style.display = "none"; return; }
+  $("#since").textContent = String(DATA.togetherDate).replace(/-/g, ".");
+  function calc() {
+    const n = new Date();
+    let y = n.getFullYear() - start.getFullYear();
+    let m = n.getMonth() - start.getMonth();
+    let d = n.getDate() - start.getDate();
+    if (d < 0) { m--; d += new Date(n.getFullYear(), n.getMonth(), 0).getDate(); }
+    if (m < 0) { y--; m += 12; }
+    return { y, m, d, days: Math.floor((n - start) / 864e5) };
+  }
+  function tick() {
+    const v = calc();
+    $("#cd-y").textContent = v.y;
+    $("#cd-mo").textContent = v.m;
+    $("#cd-d").textContent = v.d;
+    $("#cd-total").textContent = v.days;
+  }
+  tick(); setInterval(tick, 30000);
+})();
+
+/* 相册数据：供灯箱与旅程共用 */
+const photos = DATA.photos || [];
+
+/* ---------- 爱情旅程（时间轴 + 联动大图） ---------- */
+let tl = (DATA.timeline || []).filter(t => t && (t.title || t.description));
+if (!tl.length && photos.length) {
+  tl = [{ date: DATA.togetherDate || "", title: "我们的瞬间", description: DATA.story || "" }];
+}
+const E = tl.length, P = photos.length;
+
+/* 照片分配：
+   ① 事件带 photoGi（槽位显式绑定）→ 直接取该照片，互不挤占
+   ② 其余事件：照片够则一事件一图；不够则均匀分散，空出的用封面卡
+   绑定过的照片会被"预留"，自动分配不再复用，避免同一张图重复出现 */
+const picks = tl.map(() => null);
+const bound = {};
+tl.forEach((t, i) => {
+  const gi = (typeof t.photoGi === "number") ? t.photoGi : -1;
+  if (gi >= 0 && gi < P) { picks[i] = Object.assign({}, photos[gi], { gi }); bound[gi] = 1; }
+});
+const free = [];
+for (let k = 0; k < P; k++) if (!bound[k]) free.push(k);
+const unbound = tl.map((t, i) => picks[i] ? -1 : i);
+const U = unbound.filter(i => i >= 0).length, F = free.length;
+if (F && U) {
+  if (F >= U) {
+    unbound.forEach((evI, n) => { if (n < F) { const gi = free[n]; picks[evI] = Object.assign({}, photos[gi], { gi }); } });
+  } else {
+    const step = U / F, used = {};
+    for (let k = 0; k < F; k++) {
+      let slot = Math.floor(k * step + step / 2);
+      while (used[slot] && slot < U - 1) slot++;
+      used[slot] = 1;
+      const evI = unbound[slot], gi = free[k];
+      picks[evI] = Object.assign({}, photos[gi], { gi });
+    }
+  }
+}
+
+/* ---------- 无照片事件：排版封面卡 ---------- */
+const ICON = {
+  heart: "M12 20.4S3.6 15 3.6 9.3a4.8 4.8 0 0 1 8.4-3.2 4.8 4.8 0 0 1 8.4 3.2c0 5.7-8.4 11.1-8.4 11.1z",
+  star: "M12 3.6l2.6 5.3 5.8.8-4.2 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8-4.2-4.1 5.8-.8z",
+  gift: "M4 10.6h16v9.2H4zM3 7.2h18v3.4H3zM12 7.2v12.6M12 7.2C10.4 7.2 8.2 6.6 8.2 4.9c0-1 .8-1.8 1.7-1.8 1.5 0 2.1 2 2.1 4.1zM12 7.2c1.6 0 3.8-.6 3.8-2.3 0-1-.8-1.8-1.7-1.8-1.5 0-2.1 2-2.1 4.1z",
+  cake: "M5 19.4h14M6.6 19.4V13c0-1.4 1-2.4 2.4-2.4h6c1.4 0 2.4 1 2.4 2.4v6.4M6.6 15.4h10.8M12 10.6V7.2M12 7.2c0-1 .7-1.5.7-2.4 0 0-1.4.5-1.4 1.9 0 0 0 .5.7.5z",
+  pin: "M12 20.8s6.3-5.9 6.3-10.2a6.3 6.3 0 1 0-12.6 0C5.7 14.9 12 20.8 12 20.8zM12 13.4a2.9 2.9 0 1 0 0-5.8 2.9 2.9 0 0 0 0 5.8z",
+  camera: "M3.6 8.2h3.1L8.2 6.2h7.6l1.5 2h3.1v10.4H3.6zM12 16.4a3.4 3.4 0 1 0 0-6.8 3.4 3.4 0 0 0 0 6.8z"
+};
+const GRAD = [
+  "linear-gradient(150deg,#f4889e,#bd87dd)",
+  "linear-gradient(150deg,#f09a68,#ee7590)",
+  "linear-gradient(150deg,#8b7ade,#d67ab2)",
+  "linear-gradient(150deg,#57a3e0,#987ade)",
+  "linear-gradient(150deg,#e09a4c,#ea7a8e)",
+  "linear-gradient(150deg,#4da794,#6b96dc)"
+];
+const MON = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
+function iconOf(t) {
+  const s = (t.title || "") + " " + (t.description || "");
+  if (/生日|蛋糕|周岁|周年/.test(s)) return "cake";
+  if (/旅|游|出发|海|山|城|机场|高铁|trip/i.test(s)) return "pin";
+  if (/礼物|惊喜|收到|送|花/.test(s)) return "gift";
+  if (/照|拍|合影|写真|相片/.test(s)) return "camera";
+  if (/夜|星|月|晚安|跨年|烟花/.test(s)) return "star";
+  return "heart";
+}
+function faceHtml(t, i) {
+  const m = String(t.date || "").match(/(\d{4})-(\d{2})-(\d{2})/);
+  const day = m ? m[3] : String(i + 1).padStart(2, "0");
+  const ym = m ? MON[+m[2] - 1] + " " + m[1] : "";
+  return `<div style="position:absolute;inset:0;background:${GRAD[i % GRAD.length]}"></div>
+    <div style="position:relative">
+      <svg class="cico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"
+           stroke-linecap="round" stroke-linejoin="round"><path d="${ICON[iconOf(t)] || ICON.heart}"/></svg>
+      <div class="cday">${esc(day)}</div>
+      <div class="cmon">${esc(ym)}</div>
+      ${t.title ? `<div class="cttl">${esc(t.title)}</div>` : ""}
+    </div>
+    <span class="cno">NO.${String(i + 1).padStart(2, "0")}</span>`;
+}
+
+/* 时间轴：按年份分组；事件多时自动紧凑 */
+(function () {
+  const html = [];
+  let lastY = "";
+  tl.forEach((t, i) => {
+    const y = String(t.date || "").slice(0, 4);
+    if (y && y !== lastY) { lastY = y; html.push(`<div class="tl-year"><span>${esc(y)}</span></div>`); }
+    html.push(`
+  <div class="tl-item" data-i="${i}">
+    <div class="tl-date">${esc(t.date)}</div>
+    <div class="tl-card"><h3>${esc(t.title)}</h3><p>${esc(t.description)}</p></div>
+  </div>`);
+  });
+  const box = $("#tl");
+  box.innerHTML = html.join("") || '<p class="sub">还没有故事，一起去创造吧。</p>';
+  if (E > 8) box.classList.add("dense");
+})();
+
+/* 进度指示：事件少用小圆点，事件多改用 03 / 22 计数 */
+if (E > 12) {
+  $("#jBar").style.display = "none";
+  $("#jCount").innerHTML = `<b id="jNow">01</b> / ${String(E).padStart(2, "0")}`;
+} else {
+  $("#jCount").style.display = "none";
+  $("#jBar").innerHTML = tl.map((t, i) => `<i data-i="${i}"></i>`).join("");
+}
+
+let curE = -1, topA = true;
+function setEvent(i) {
+  if (i < 0 || i >= E || i === curE) return;
+  curE = i;
+  const t = tl[i], p = picks[i];
+  $("#jTitle").textContent = t.title || "";
+  $("#jDate").textContent = t.date || "";
+  document.querySelectorAll(".tl-item").forEach((el, k) => el.classList.toggle("active", k === i));
+  document.querySelectorAll("#jBar i").forEach((el, k) => el.classList.toggle("on", k === i));
+  const nowEl = $("#jNow");
+  if (nowEl) nowEl.textContent = String(i + 1).padStart(2, "0");
+  const show = topA ? $("#jImgA") : $("#jImgB");
+  const hide = topA ? $("#jImgB") : $("#jImgA");
+  const frame = $("#frame"), lq = $("#jLq"), cv = $("#jCv");
+  if (!p) {
+    /* 该事件没有照片：展示排版封面卡，不用随机图占位 */
+    show.classList.remove("on", "zoom");
+    hide.classList.remove("on", "zoom");
+    lq.classList.add("off");
+    cv.innerHTML = faceHtml(t, i);
+    cv.classList.add("on");
+    frame.style.cursor = "default";
+    frame.dataset.kind = "card";
+    return;
+  }
+  frame.dataset.kind = "photo";
+  cv.classList.remove("on");
+  /* 先显示该图的模糊占位，清晰图就绪后淡出 */
+  if (p.lqip) {
+    lq.src = p.lqip;
+    lq.classList.remove("off");
+  }
+  frame.style.cursor = "zoom-in";
+  const pre = new Image();
+  let done = false;
+  const go = () => {
+    if (done || curE !== i) return;
+    done = true;
+    show.src = p.src;
+    show.alt = p.title || t.title || "";
+    show.classList.add("zoom");
+    setTimeout(() => {
+      if (curE !== i) return;
+      show.classList.add("on");
+      hide.classList.remove("on", "zoom");
+      topA = !topA;
+      frame.dataset.ready = "1";
+      setTimeout(() => lq.classList.add("off"), 120);
+    }, 20);
+  };
+  pre.onload = go;
+  pre.onerror = go;
+  pre.src = p.src;
+  if (pre.complete) go();
+  setTimeout(go, 1500);
+}
+
+/* 点击时间轴 —— 平滑滑到该事件，由滑动驱动换图 */
+$("#tl").onclick = e => {
+  const it = e.target.closest(".tl-item");
+  if (it) it.scrollIntoView({ behavior: "smooth", block: "center" });
+};
+$("#frame").onclick = () => {
+  const p = picks[curE];
+  if (p) openLb(p.gi);
+};
+setEvent(0);
+
+/* 滚动驱动：切换照片 + 顶部进度条 + 时间轴连线生长 */
+(function () {
+  const items = document.querySelectorAll(".tl-item");
+  const nav = $("#nav"), line = $("#tlLine"), tlBox = $("#tl");
+  function progress() {
+    const h = document.documentElement.scrollHeight - innerHeight;
+    const p = h > 0 ? Math.min(1, Math.max(0, scrollY / h)) : 0;
+    nav.style.setProperty("--p", (p * 100).toFixed(2) + "%");
+  }
+  function growLine() {
+    if (!line || !tlBox || curE < 0 || !items[curE]) return;
+    const base = tlBox.getBoundingClientRect().top;
+    const r = items[curE].getBoundingClientRect();
+    line.style.height = Math.max(0, r.top + 16 - base) + "px";
+  }
+  function pick() {
+    const mid = innerHeight * 0.45;
+    let best = curE < 0 ? 0 : curE, bd = Infinity;
+    items.forEach((el, i) => {
+      const r = el.getBoundingClientRect();
+      const d = Math.abs(r.top + r.height / 2 - mid);
+      if (d < bd) { bd = d; best = i; }
+    });
+    if (best !== curE) setEvent(best);
+    growLine();
+  }
+  function onScroll() { progress(); pick(); }
+  addEventListener("scroll", onScroll, { passive: true });
+  addEventListener("resize", onScroll, { passive: true });
+  onScroll();
+})();
+
+/* 灯箱 */
+(function () {
+  const lb = $("#lb"), img = $("#lbImg");
+  let cur = 0;
+  window.openLb = function (i) {
+    if (!photos.length) return;
+    cur = (i + photos.length) % photos.length;
+    img.src = photos[cur].full || photos[cur].src;
+    img.alt = photos[cur].title || "";
+    lb.classList.add("open");
+    document.body.classList.add("locked");
+  };
+  function hide() { lb.classList.remove("open"); document.body.classList.remove("locked"); }
+  $("#lbX").onclick = hide;
+  $("#lbPrev").onclick = e => { e.stopPropagation(); openLb(cur - 1); };
+  $("#lbNext").onclick = e => { e.stopPropagation(); openLb(cur + 1); };
+  lb.onclick = e => { if (e.target === lb) hide(); };
+  document.addEventListener("keydown", e => {
+    if (!lb.classList.contains("open")) return;
+    if (e.key === "Escape") hide();
+    if (e.key === "ArrowLeft") openLb(cur - 1);
+    if (e.key === "ArrowRight") openLb(cur + 1);
+  });
+})();
+
+/* 漂浮音乐窗（背景音乐 + 歌词） */
+(function () {
+  const songs = DATA.music || [];
+  const float = $("#mfloat");
+  if (!songs.length) { float.remove(); return; }
+
+  const audio = $("#audio"), fab = $("#mfFab"), lyricBox = $("#mfLyric");
+  let idx = 0, lrc = [], lines = [], everPlayed = false;
+
+  function parseLrc(text) {
+    const out = [];
+    String(text || "").split(/\r?\n/).forEach(line => {
+      const m = line.match(/^\s*\[(\d{1,2}):(\d{2})(?:[.:]\d{1,3})?\]\s*(.*)$/);
+      if (m) {
+        const txt = m[3].trim();
+        if (txt) out.push({ t: (+m[1]) * 60 + (+m[2]), txt });
+      }
+    });
+    return out.sort((a, b) => a.t - b.t);
+  }
+
+  function renderLyric() {
+    if (!lrc.length) {
+      lyricBox.innerHTML = '<div style="text-align:center;color:var(--ink-soft);font-size:12px;padding-top:26px">暂无歌词</div>';
+      lines = [];
+      return;
+    }
+    lyricBox.innerHTML = "<ul>" + lrc.map((l, i) => `<li>${esc(l.txt)}</li>`).join("") + "</ul>";
+    lines = [...lyricBox.querySelectorAll("li")];
+  }
+
+  function syncLyric() {
+    if (!lines.length) return;
+    const t = audio.currentTime;
+    let cur = -1;
+    for (let i = 0; i < lrc.length; i++) { if (lrc[i].t <= t + 0.4) cur = i; else break; }
+    if (cur < 0) { lines.forEach(li => li.classList.remove("cur")); return; }
+    if (lines[cur] && !lines[cur].classList.contains("cur")) {
+      lines.forEach((li, i) => li.classList.toggle("cur", i === cur));
+      lyricBox.querySelector("ul").style.transform = "translateY(" + (26 - cur * 22) + "px)";
+    }
+  }
+
+  function load(i, auto) {
+    idx = (i + songs.length) % songs.length;
+    const s = songs[idx];
+    audio.src = s.url;
+    $("#mfTitle").textContent = s.title || "未命名";
+    $("#mfArtist").textContent = s.artist || "";
+    lrc = parseLrc(s.lyrics); renderLyric();
+    $("#mfProg").style.width = "0";
+    if (auto) audio.play().catch(() => {});
+  }
+
+  fab.onclick = () => float.classList.toggle("open");
+  $("#mfClose").onclick = () => float.classList.remove("open");
+  $("#mfPlay").onclick = () => { audio.paused ? audio.play().catch(() => {}) : audio.pause(); };
+  $("#mfPrev").onclick = () => load(idx - 1, !audio.paused);
+  $("#mfNext").onclick = () => load(idx + 1, !audio.paused);
+  $("#mfBar").onclick = e => {
+    if (!audio.duration) return;
+    const r = e.currentTarget.getBoundingClientRect();
+    audio.currentTime = (e.clientX - r.left) / r.width * audio.duration;
+  };
+
+  audio.onplay = () => {
+    $("#mfPlay").textContent = "❚❚";
+    float.classList.add("playing");
+    fab.classList.remove("idle");
+    everPlayed = true;
+  };
+  audio.onpause = () => { $("#mfPlay").textContent = "▶"; float.classList.remove("playing"); };
+  audio.ontimeupdate = () => {
+    if (audio.duration) $("#mfProg").style.width = (audio.currentTime / audio.duration * 100) + "%";
+    syncLyric();
+  };
+  audio.onended = () => load(idx + 1, true);
+
+  load(0, false);
+
+  // 首次交互后自动播放背景音乐（浏览器禁止无交互自动有声播放）
+  const kick = () => {
+    if (!everPlayed && audio.paused) audio.play().catch(() => {});
+  };
+  ["pointerdown", "keydown", "touchstart", "wheel"].forEach(ev =>
+    addEventListener(ev, kick, { once: true, passive: true })
+  );
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) kick(); });
+})();
+
+/* 花瓣飘落 */
+(function () {
+  const cv = $("#petals");
+  if (!cv) return;
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) { cv.remove(); return; }
+  const ctx = cv.getContext("2d");
+  const dpr = Math.min(devicePixelRatio || 1, 2);
+  const colors = ["#f9a8c0", "#f6bfd2", "#e6b6e6", "#fcd3da"];
+  let w = 0, h = 0, ps = [];
+  function spawn(init) {
+    return {
+      x: Math.random() * w,
+      y: init ? Math.random() * h : -30,
+      r: 5 + Math.random() * 7,
+      sp: 0.25 + Math.random() * 0.55,
+      sw: 0.3 + Math.random() * 0.8,
+      ph: Math.random() * Math.PI * 2,
+      rot: Math.random() * Math.PI,
+      vr: (Math.random() - 0.5) * 0.014,
+      a: 0.3 + Math.random() * 0.35,
+      c: colors[(Math.random() * colors.length) | 0],
+    };
+  }
+  function size() {
+    w = innerWidth; h = innerHeight;
+    cv.width = w * dpr; cv.height = h * dpr;
+    cv.style.width = w + "px"; cv.style.height = h + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const n = w < 600 ? 9 : w < 1024 ? 14 : 20;
+    ps = Array.from({ length: n }, () => spawn(true));
+  }
+  let last = 0;
+  function frame(t) {
+    requestAnimationFrame(frame);
+    if (t - last < 33) return;          /* 约 30fps，省电 */
+    last = t;
+    ctx.clearRect(0, 0, w, h);
+    for (let i = 0; i < ps.length; i++) {
+      const p = ps[i];
+      p.y += p.sp; p.ph += 0.012; p.rot += p.vr;
+      p.x += Math.sin(p.ph) * p.sw * 0.5;
+      if (p.y > h + 30 || p.x < -50 || p.x > w + 50) { ps[i] = spawn(false); continue; }
+      ctx.save();
+      ctx.globalAlpha = p.a;
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = p.c;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, p.r, p.r * 0.56, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+  size();
+  addEventListener("resize", size, { passive: true });
+  requestAnimationFrame(frame);
+})();
+
+/* 滚动揭示 + 导航高亮 */
+(function () {
+  const io = new IntersectionObserver(es => {
+    es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } });
+  }, { rootMargin: "0px 0px -8% 0px", threshold: .08 });
+  document.querySelectorAll(".reveal,.tl-item").forEach((el, i) => {
+    el.style.transitionDelay = Math.min(i, 8) * 45 + "ms";
+    io.observe(el);
+  });
+
+  const nav = $("#nav");
+  const links = [...document.querySelectorAll("#menu a")];
+  const secs = links.map(a => document.querySelector(a.getAttribute("href"))).filter(Boolean);
+  const hero = document.querySelector(".hero");
+  let heroH = hero ? hero.offsetHeight - 64 : 400;
+  const onScroll = () => {
+    nav.classList.toggle("stuck", scrollY > heroH);
+    const y = scrollY + innerHeight * .35;
+    let cur = 0;
+    secs.forEach((s, i) => { if (s.offsetTop <= y) cur = i; });
+    links.forEach((a, i) => a.classList.toggle("on", i === cur));
+  };
+  addEventListener("resize", () => { heroH = hero ? hero.offsetHeight - 64 : 400; }, { passive: true });
+  addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
+})();
+</script>
+</body>
+</html>
