@@ -410,20 +410,24 @@ footer .sm{margin-top:10px;font-family:var(--serif);font-size:15px;color:var(--i
 }
 .lb.open{display:grid}
 body.locked{overflow:hidden}
-.lb img{max-width:100%;max-height:88vh;border-radius:12px;box-shadow:0 30px 80px -20px rgba(0,0,0,.8)}
-.lb .x{position:absolute;top:16px;right:20px;color:#fff;font-size:30px;line-height:1;opacity:.8;z-index:3;cursor:pointer}
+.lb img{max-width:100%;max-height:88vh;border-radius:12px;box-shadow:0 30px 80px -20px rgba(0,0,0,.8);position:relative;z-index:1}
+.lb .x{position:absolute;top:16px;right:20px;color:#fff;font-size:30px;line-height:1;opacity:.8;z-index:4;cursor:pointer}
 .lb .nav{
   position:absolute;top:50%;translate:0 -50%;color:#fff;font-size:26px;
   width:48px;height:48px;border-radius:50%;display:grid;place-items:center;
-  background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.25);opacity:.9;transition:.2s;
-  z-index:2;cursor:pointer;
+  background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.25);opacity:.9;transition:.2s;
+  z-index:3;cursor:pointer;pointer-events:auto;
 }
-.lb .nav:hover{background:rgba(0,0,0,.6);opacity:1}
-.lb .nav.prev{left:max(12px,2vw)}.lb .nav.next{right:max(12px,2vw)}
+.lb .nav:hover{background:rgba(0,0,0,.65);opacity:1}
+/* fallback for older browsers, then use max() where supported */
+.lb .nav.prev{left:14px}.lb .nav.next{right:14px}
+.lb .nav.prev{left:max(14px,2vw)}.lb .nav.next{right:max(14px,2vw)}
 @media (max-width:600px){
-  .lb .nav{top:auto;bottom:18px;translate:0 0;width:42px;height:42px;font-size:22px}
-  .lb .nav.prev{left:18px;right:auto}
-  .lb .nav.next{right:18px;left:auto}
+  .lb .nav{top:auto;bottom:18px;translate:0 0;width:44px;height:44px;font-size:22px}
+  .lb .nav.prev{left:14px;right:auto}
+  .lb .nav.next{right:14px;left:auto}
+  .lb .nav.prev{left:max(14px,4vw)}
+  .lb .nav.next{right:max(14px,4vw)}
 }
 
 /* ---------- 通用弹层锁定滚动 ---------- */
@@ -819,7 +823,9 @@ if (E > 12) {
   $("#jBar").innerHTML = tl.map((t, i) => `<i data-i="${i}"></i>`).join("");
 }
 
-let curE = -1, topA = true;
+let curE = -1;
+let frontEl = $("#jImgA"), backEl = $("#jImgB");
+let loadToken = 0;
 function setEvent(i) {
   if (i < 0 || i >= E || i === curE) return;
   curE = i;
@@ -831,14 +837,10 @@ function setEvent(i) {
   const nowEl = $("#jNow");
   if (nowEl) nowEl.textContent = String(i + 1).padStart(2, "0");
   const frame = $("#frame"), lq = $("#jLq"), cv = $("#jCv");
-  /* 入口同步决定显示层，避免异步切换导致层状态错乱、图文不同步 */
-  const show = topA ? $("#jImgA") : $("#jImgB");
-  const hide = topA ? $("#jImgB") : $("#jImgA");
-  topA = !topA;
   if (!p) {
     /* 该事件没有照片：展示排版封面卡，不用随机图占位 */
-    show.classList.remove("on", "zoom");
-    hide.classList.remove("on", "zoom");
+    frontEl.classList.remove("on", "zoom");
+    backEl.classList.remove("on", "zoom");
     lq.classList.add("off");
     cv.innerHTML = faceHtml(t, i);
     cv.classList.add("on");
@@ -852,25 +854,30 @@ function setEvent(i) {
   if (p.lqip) {
     lq.src = p.lqip;
     lq.classList.remove("off");
+  } else {
+    lq.classList.add("off");
   }
   frame.style.cursor = "zoom-in";
-  show.src = p.src;
-  show.alt = p.title || t.title || "";
-  let settled = false;
+  /* 在背后的隐藏层加载新图，加载完成后再交换到前景；始终让新图层位于旧图层之上 */
+  const token = ++loadToken;
+  backEl.alt = p.title || t.title || "";
   const reveal = () => {
-    if (settled || curE !== i) return;
-    settled = true;
-    show.classList.add("on", "zoom");
-    hide.classList.remove("on", "zoom");
+    if (token !== loadToken) return;
+    if (!backEl.complete || backEl.naturalWidth === 0) return;
+    backEl.style.zIndex = 2;
+    frontEl.style.zIndex = 1;
+    backEl.classList.add("on", "zoom");
+    frontEl.classList.remove("on", "zoom");
     frame.dataset.ready = "1";
     setTimeout(() => lq.classList.add("off"), 120);
+    setTimeout(() => { backEl.style.zIndex = ""; frontEl.style.zIndex = ""; }, 600);
+    [frontEl, backEl] = [backEl, frontEl];
   };
-  const pre = new Image();
-  pre.onload = reveal;
-  pre.onerror = reveal;
-  pre.src = p.src;
-  if (pre.complete) reveal();
-  setTimeout(reveal, 1500);
+  backEl.onload = reveal;
+  backEl.onerror = () => { if (token === loadToken) reveal(); };
+  backEl.src = p.src;
+  if (backEl.complete) reveal();
+  setTimeout(() => { if (token === loadToken) reveal(); }, 1800);
 }
 
 /* 点击时间轴 —— 平滑滑到该事件，由滑动驱动换图 */
