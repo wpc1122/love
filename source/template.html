@@ -861,6 +861,7 @@ function setEvent(i) {
   /* 在背后的隐藏层加载新图，加载完成后再交换到前景；始终让新图层位于旧图层之上 */
   const token = ++loadToken;
   backEl.alt = p.title || t.title || "";
+  try { backEl.setAttribute("fetchpriority", "high"); } catch (e) {}
   const reveal = () => {
     if (token !== loadToken) return;
     if (!backEl.complete || backEl.naturalWidth === 0) return;
@@ -890,6 +891,37 @@ $("#frame").onclick = () => {
   if (p) openLb(p.gi);
 };
 setEvent(0);
+
+/* 预加载：把旅程帧图 + 灯箱大图全部提前拉进浏览器缓存。
+   这样点击时间轴或滑动时，图片已在本地缓存，瞬间切换，不再等待网络。 */
+(function preloadImgs(){
+  const seen = new Set();
+  const list = [];
+  picks.forEach(p => {
+    if (!p) return;
+    if (p.src && !seen.has(p.src)) { seen.add(p.src); list.push(p.src); }
+    const f = p.full || p.src;
+    if (f && !seen.has(f)) { seen.add(f); list.push(f); }
+  });
+  if (!list.length) return;
+  let idx = 0, active = 0;
+  const MAX = 5;                 /* 并发 5，避免一次性打满连接 */
+  function next(){
+    while (active < MAX && idx < list.length) {
+      const url = list[idx++];
+      active++;
+      const img = new Image();
+      img.decoding = "async";
+      try { img.setAttribute("fetchpriority", "low"); } catch (e) {}
+      const done = () => { active--; next(); };
+      img.onload = done; img.onerror = done;
+      img.src = url;
+    }
+  }
+  const start = () => setTimeout(next, 400);   /* 首屏渲染完再开始，不抢关键资源 */
+  if (document.readyState === "complete") start();
+  else addEventListener("load", start, { once: true });
+})();
 
 /* 滚动驱动：切换照片 + 顶部进度条 + 时间轴连线生长 */
 (function () {
