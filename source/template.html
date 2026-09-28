@@ -411,14 +411,20 @@ footer .sm{margin-top:10px;font-family:var(--serif);font-size:15px;color:var(--i
 .lb.open{display:grid}
 body.locked{overflow:hidden}
 .lb img{max-width:100%;max-height:88vh;border-radius:12px;box-shadow:0 30px 80px -20px rgba(0,0,0,.8)}
-.lb .x{position:absolute;top:16px;right:20px;color:#fff;font-size:30px;line-height:1;opacity:.8}
+.lb .x{position:absolute;top:16px;right:20px;color:#fff;font-size:30px;line-height:1;opacity:.8;z-index:3;cursor:pointer}
 .lb .nav{
   position:absolute;top:50%;translate:0 -50%;color:#fff;font-size:26px;
   width:48px;height:48px;border-radius:50%;display:grid;place-items:center;
-  background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);opacity:.85;transition:.2s;
+  background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.25);opacity:.9;transition:.2s;
+  z-index:2;cursor:pointer;
 }
-.lb .nav:hover{background:rgba(255,255,255,.22)}
-.lb .nav.prev{left:2vw}.lb .nav.next{right:2vw}
+.lb .nav:hover{background:rgba(0,0,0,.6);opacity:1}
+.lb .nav.prev{left:max(12px,2vw)}.lb .nav.next{right:max(12px,2vw)}
+@media (max-width:600px){
+  .lb .nav{top:auto;bottom:18px;translate:0 0;width:42px;height:42px;font-size:22px}
+  .lb .nav.prev{left:18px;right:auto}
+  .lb .nav.next{right:18px;left:auto}
+}
 
 /* ---------- 通用弹层锁定滚动 ---------- */
 body.locked{overflow:hidden}
@@ -824,9 +830,11 @@ function setEvent(i) {
   document.querySelectorAll("#jBar i").forEach((el, k) => el.classList.toggle("on", k === i));
   const nowEl = $("#jNow");
   if (nowEl) nowEl.textContent = String(i + 1).padStart(2, "0");
+  const frame = $("#frame"), lq = $("#jLq"), cv = $("#jCv");
+  /* 入口同步决定显示层，避免异步切换导致层状态错乱、图文不同步 */
   const show = topA ? $("#jImgA") : $("#jImgB");
   const hide = topA ? $("#jImgB") : $("#jImgA");
-  const frame = $("#frame"), lq = $("#jLq"), cv = $("#jCv");
+  topA = !topA;
   if (!p) {
     /* 该事件没有照片：展示排版封面卡，不用随机图占位 */
     show.classList.remove("on", "zoom");
@@ -846,28 +854,23 @@ function setEvent(i) {
     lq.classList.remove("off");
   }
   frame.style.cursor = "zoom-in";
-  const pre = new Image();
-  let done = false;
-  const go = () => {
-    if (done || curE !== i) return;
-    done = true;
-    show.src = p.src;
-    show.alt = p.title || t.title || "";
-    show.classList.add("zoom");
-    setTimeout(() => {
-      if (curE !== i) return;
-      show.classList.add("on");
-      hide.classList.remove("on", "zoom");
-      topA = !topA;
-      frame.dataset.ready = "1";
-      setTimeout(() => lq.classList.add("off"), 120);
-    }, 20);
+  show.src = p.src;
+  show.alt = p.title || t.title || "";
+  let settled = false;
+  const reveal = () => {
+    if (settled || curE !== i) return;
+    settled = true;
+    show.classList.add("on", "zoom");
+    hide.classList.remove("on", "zoom");
+    frame.dataset.ready = "1";
+    setTimeout(() => lq.classList.add("off"), 120);
   };
-  pre.onload = go;
-  pre.onerror = go;
+  const pre = new Image();
+  pre.onload = reveal;
+  pre.onerror = reveal;
   pre.src = p.src;
-  if (pre.complete) go();
-  setTimeout(go, 1500);
+  if (pre.complete) reveal();
+  setTimeout(reveal, 1500);
 }
 
 /* 点击时间轴 —— 平滑滑到该事件，由滑动驱动换图 */
