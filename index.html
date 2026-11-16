@@ -923,28 +923,46 @@ function setEvent(i) {
   const target = backEl;
   const loader = new Image();
   loader.decoding = "async";
-  let settled = false;
+  try { loader.setAttribute("fetchpriority", "high"); } catch (e) {}
+  let settled = false, fallback = 0, timer = 0;
+
+  const showLayer = () => {
+    if (token !== loadToken) return;
+    target.style.zIndex = 2;
+    frontEl.style.zIndex = 1;
+    target.classList.add("on", "zoom");
+    frame.dataset.ready = "1";
+    lq.classList.add("off");
+    [frontEl, backEl] = [backEl, frontEl];
+  };
+  /* 兜底：离屏预载失败/超时，就把图交给隐藏图层，交给浏览器自己加载重试
+     （带 fetchpriority、走浏览器缓存），避免相纸永远停在模糊占位。 */
+  const useLayer = () => {
+    if (token !== loadToken) return;      /* 过期事件不再兜底，否则会改到当前图层的 src */
+    fallback = 1;
+    target.alt = p.title || t.title || "";
+    target.onload = () => { if (token === loadToken) showLayer(); };
+    target.onerror = () => { if (token === loadToken) lq.classList.remove("off"); };
+    try { target.setAttribute("fetchpriority", "high"); } catch (e) {}
+    target.src = p.src;
+    if (target.complete) { if (target.naturalWidth) showLayer(); }
+  };
   const reveal = () => {
     if (settled || token !== loadToken) return;
-    settled = true;
-    if (!loader.naturalWidth) return;         /* 失败就保持本事件的 LQIP，不回退旧图 */
+    settled = true; clearTimeout(timer);
+    if (!loader.naturalWidth) { fallback = 1; useLayer(); return; }
     target.src = p.src;                       /* 已在缓存，无需等网络 */
     target.alt = p.title || t.title || "";
-    const show = () => {
-      if (token !== loadToken) return;
-      target.style.zIndex = 2;
-      frontEl.style.zIndex = 1;
-      target.classList.add("on", "zoom");
-      frame.dataset.ready = "1";
-      lq.classList.add("off");
-      [frontEl, backEl] = [backEl, frontEl];
-    };
-    if (target.decode) target.decode().then(show, show); else show();
+    if (target.decode) target.decode().then(showLayer, showLayer); else showLayer();
   };
   loader.onload = reveal;
   loader.onerror = reveal;
   loader.src = p.src;
   if (loader.complete) reveal();
+  else timer = setTimeout(() => {           /* 超过 2.5s 没就绪就走兜底 */
+    if (token !== loadToken) return;       /* 快速滚动：过期事件放弃，不动当前图层 */
+    if (!settled) { settled = true; fallback = 1; useLayer(); }
+  }, 2500);
 }
 
 /* 点击时间轴：立即同步图文，再把该事件中心对准锚点 */
