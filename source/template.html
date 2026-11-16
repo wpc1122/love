@@ -216,22 +216,6 @@ h2.title{
 .tl-card h3{margin:0 0 6px;font-size:18px;font-family:var(--serif);font-weight:600}
 .tl-card p{margin:0;color:var(--ink-soft);font-size:15px}
 
-/* ---------- gallery ---------- */
-.grid{columns:4 220px;column-gap:14px}
-.shot{
-  position:relative;break-inside:avoid;margin:0 0 14px;border-radius:16px;overflow:hidden;
-  background:#fdeff1;box-shadow:var(--shadow);cursor:zoom-in;opacity:0;
-  transform:translateY(18px);transition:opacity .5s,transform .5s;
-}
-.shot.in{opacity:1;transform:none}
-.shot img{width:100%;height:auto;display:block;transition:transform .6s cubic-bezier(.2,.8,.2,1)}
-.shot:hover img{transform:scale(1.06)}
-.shot figcaption{
-  position:absolute;inset:auto 0 0 0;padding:28px 14px 12px;font-size:13px;color:#fff;
-  background:linear-gradient(180deg,transparent,rgba(30,10,20,.7));opacity:0;transition:.3s;
-}
-.shot:hover figcaption{opacity:1}
-
 /* ---------- journey：时间轴 + 联动大图 ---------- */
 .journey{display:grid;grid-template-columns:1.02fr .98fr;gap:clamp(26px,4vw,54px);align-items:start}
 .stage{position:sticky;top:92px}
@@ -439,7 +423,7 @@ body.locked{overflow:hidden}
 .reveal.in{opacity:1;transform:none}
 @media(prefers-reduced-motion:reduce){
   *{animation:none!important;transition:none!important}
-  .reveal,.tl-item,.shot{opacity:1;transform:none}
+  .reveal,.tl-item{opacity:1;transform:none}
 }
 
 /* ---------- 开场加载 ---------- */
@@ -560,15 +544,6 @@ body.locked{overflow:hidden}
         <div class="tl" id="tl"></div>
       </div>
     </div>
-  </div>
-</section>
-
-<section class="sec" id="gallery">
-  <div class="wrap">
-    <span class="eyebrow">Sweet Moments</span>
-    <h2 class="title" id="galleryTitle">甜蜜瞬间</h2>
-    <p class="sub" id="galleryText"></p>
-    <div class="grid" id="grid"></div>
   </div>
 </section>
 
@@ -1194,19 +1169,6 @@ $("#frame").onclick = () => { const p = picks[curE]; if (p) openLb(p.gi); };
   document.addEventListener("visibilitychange", () => { if (!document.hidden) kick(); });
 })();
 
-/* ---------- 甜蜜瞬间：瀑布流画廊（复用灯箱） ---------- */
-(function () {
-  const box = $("#grid");
-  if (!box || !photos.length) return;
-  const t = $("#galleryTitle"), s = $("#galleryText");
-  if (t) t.textContent = DATA.galleryTitle || "甜蜜瞬间";
-  if (s) s.textContent = DATA.galleryText || "";
-  box.innerHTML = photos.map((p, i) =>
-    `<figure class="shot" data-i="${i}"><img loading="lazy" decoding="async" src="${esc(p.src)}" alt="${esc(p.title || "")}"><figcaption>${esc(p.title || "")}</figcaption></figure>`
-  ).join("");
-  box.onclick = e => { const f = e.target.closest(".shot"); if (f) openLb(Number(f.dataset.i)); };
-})();
-
 /* 花瓣飘落 */
 (function () {
   const cv = $("#petals");
@@ -1238,18 +1200,11 @@ $("#frame").onclick = () => { const p = picks[curE]; if (p) openLb(p.gi); };
     const n = w < 600 ? 9 : w < 1024 ? 14 : 20;
     ps = Array.from({ length: n }, () => spawn(true));
   }
-  let last = 0, running = true;
-  const heroEl = document.querySelector(".hero");
-  if (heroEl && window.IntersectionObserver) {
-    new IntersectionObserver(es => {
-      running = es[0].isIntersecting;
-      if (running) last = 0;
-    }, { threshold: 0 }).observe(heroEl);
-  }
+  let last = 0;
   document.addEventListener("visibilitychange", () => { if (!document.hidden) last = 0; });
   function frame(t) {
     requestAnimationFrame(frame);
-    if (!running) return;               /* hero 离屏即停画，省电省合成 */
+    if (document.hidden) return;        /* 仅标签页切走时暂停，切回立即恢复 */
     if (t - last < 33) return;          /* 约 30fps，省电 */
     last = t;
     ctx.clearRect(0, 0, w, h);
@@ -1279,7 +1234,7 @@ $("#frame").onclick = () => { const p = picks[curE]; if (p) openLb(p.gi); };
   const io = new IntersectionObserver(es => {
     es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } });
   }, { rootMargin: "0px 0px -2% 0px", threshold: .03 });
-  document.querySelectorAll(".reveal,.shot").forEach((el, i) => {
+  document.querySelectorAll(".reveal").forEach((el, i) => {
     el.style.transitionDelay = Math.min(i, 8) * 40 + "ms";
     io.observe(el);
   });
