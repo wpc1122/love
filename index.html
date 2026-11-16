@@ -217,14 +217,14 @@ h2.title{
 .tl-card p{margin:0;color:var(--ink-soft);font-size:15px}
 
 /* ---------- gallery ---------- */
-.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(210px,1fr))}
+.grid{columns:4 220px;column-gap:14px}
 .shot{
-  position:relative;aspect-ratio:1/1;border-radius:16px;overflow:hidden;
+  position:relative;break-inside:avoid;margin:0 0 14px;border-radius:16px;overflow:hidden;
   background:#fdeff1;box-shadow:var(--shadow);cursor:zoom-in;opacity:0;
   transform:translateY(18px);transition:opacity .5s,transform .5s;
 }
 .shot.in{opacity:1;transform:none}
-.shot img{width:100%;height:100%;object-fit:cover;transition:transform .6s cubic-bezier(.2,.8,.2,1)}
+.shot img{width:100%;height:auto;display:block;transition:transform .6s cubic-bezier(.2,.8,.2,1)}
 .shot:hover img{transform:scale(1.06)}
 .shot figcaption{
   position:absolute;inset:auto 0 0 0;padding:28px 14px 12px;font-size:13px;color:#fff;
@@ -248,16 +248,18 @@ h2.title{
 /* 双层交叉淡入：随滑动平滑换图 */
 .frame .ly{
   position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
-  opacity:0;transition:opacity .55s ease,transform 6s linear;
+  opacity:0;transition:opacity 0s;will-change:opacity;
 }
-.frame .ly.on{opacity:1}
+/* 淡入有过渡、淡出瞬时：换事件时旧照片立刻消失，不再与新标题并存 */
+.frame .ly.on{opacity:1;transition:opacity .35s ease,transform 6s linear}
 .frame .ly.zoom{transform:scale(1.06)}
 /* 加载前的模糊占位（LQIP） */
 .frame .lq{
   position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
-  filter:blur(14px);transform:scale(1.1);transition:opacity .5s ease;
+  filter:blur(14px);transform:scale(1.1);transition:opacity 0s;
 }
-.frame .lq.off{opacity:0}
+/* 模糊占位瞬时出现、清晰图就绪后才淡出 */
+.frame .lq.off{opacity:0;transition:opacity .3s ease}
 .zi{
   position:absolute;right:14px;bottom:14px;width:38px;height:38px;border-radius:50%;
   background:rgba(255,255,255,.9);display:grid;place-items:center;font-size:15px;
@@ -410,7 +412,7 @@ footer .sm{margin-top:10px;font-family:var(--serif);font-size:15px;color:var(--i
 }
 .lb.open{display:grid}
 body.locked{overflow:hidden}
-.lb img{max-width:100%;max-height:88vh;border-radius:12px;box-shadow:0 30px 80px -20px rgba(0,0,0,.8);position:relative;z-index:1}
+.lb img{max-width:100%;max-height:88vh;border-radius:12px;box-shadow:0 30px 80px -20px rgba(0,0,0,.8);position:relative;z-index:1;transition:opacity .3s ease}
 .lb .x{position:absolute;top:16px;right:20px;color:#fff;font-size:30px;line-height:1;opacity:.8;z-index:4;cursor:pointer}
 .lb .nav{
   position:absolute;top:50%;translate:0 -50%;color:#fff;font-size:26px;
@@ -437,7 +439,7 @@ body.locked{overflow:hidden}
 .reveal.in{opacity:1;transform:none}
 @media(prefers-reduced-motion:reduce){
   *{animation:none!important;transition:none!important}
-  .reveal,.tl-item{opacity:1;transform:none}
+  .reveal,.tl-item,.shot{opacity:1;transform:none}
 }
 
 /* ---------- 开场加载 ---------- */
@@ -561,6 +563,15 @@ body.locked{overflow:hidden}
   </div>
 </section>
 
+<section class="sec" id="gallery">
+  <div class="wrap">
+    <span class="eyebrow">Sweet Moments</span>
+    <h2 class="title" id="galleryTitle">甜蜜瞬间</h2>
+    <p class="sub" id="galleryText"></p>
+    <div class="grid" id="grid"></div>
+  </div>
+</section>
+
 <footer>
   <div class="wrap">
     <p id="foot"></p>
@@ -640,6 +651,14 @@ $("#foot").textContent = DATA.footer || "";
 $("#footNames").textContent = (DATA.name1 && DATA.name2) ? DATA.name1 + " & " + DATA.name2 : "";
 const meta = document.querySelector('meta[name="description"]');
 if (meta) meta.content = (DATA.title || "") + " · " + (DATA.subtitle || "");
+/* theme-color 跟随系统明暗 */
+(function () {
+  const tc = document.querySelector('meta[name="theme-color"]');
+  if (!tc) return;
+  const apply = () => { tc.content = matchMedia("(prefers-color-scheme: dark)").matches ? "#141013" : "#fff7f8"; };
+  apply();
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", apply);
+})();
 
 /* hero 背景（带模糊占位） */
 (function () {
@@ -823,24 +842,93 @@ if (E > 12) {
   $("#jBar").innerHTML = tl.map((t, i) => `<i data-i="${i}"></i>`).join("");
 }
 
+/* ---------- 旅程几何：一次测量，之后滚动只做纯算术 ----------
+   原先每个 scroll 事件里对 26 个 .tl-item 调 getBoundingClientRect()（26 次强制重排），
+   而这些条目带入场位移 transform:translateY(22px)，动画期间位置还在变，
+   于是选中的事件会来回横跳 —— 这就是「滑动不流畅 / 图文对不上」的主因。
+   改用 offsetTop（不受 transform 影响）+ 缓存，滚动时零 rect 读取。 */
+const J = {
+  items: [...document.querySelectorAll(".tl-item")],
+  wrap: $(".tl-wrap"),
+  box: $("#tl"),
+  stage: $(".stage"),
+  ph: document.querySelector(".frame .ph"),
+  tops: [], centers: [], wrapTop: 0, wrapH: 0, anchor: 0,
+  measure() {
+    const topOf = el => {
+      let y = 0, n = el;
+      while (n && n !== this.wrap) { y += n.offsetTop; n = n.offsetParent; }
+      return y;
+    };
+    if (!this.tail) {
+      this.tail = document.createElement("div");
+      this.tail.className = "tl-tail";
+      this.tail.setAttribute("aria-hidden", "true");
+      this.tail.style.pointerEvents = "none";
+      this.wrap.appendChild(this.tail);
+    }
+    this.wrapTop = this.wrap.getBoundingClientRect().top + scrollY;
+    this.tops = this.items.map(topOf);
+    this.centers = this.items.map((el, i) => this.tops[i] + el.offsetHeight / 2);
+    /* 锚点用 sticky 大图的稳定中心，不随滚动漂移。
+       单列（手机）布局时大图压在时间轴上方，锚点改取大图下方可见区的中部。 */
+    const stickyTop = parseFloat(getComputedStyle(this.stage).top) || 0;
+    const stageH = this.stage.offsetHeight;
+    const single = matchMedia("(max-width:900px)").matches;
+    const below = Math.max(120, innerHeight - stickyTop - stageH);
+    this.anchor = single
+      ? Math.min(innerHeight - 24, stickyTop + stageH + below * 0.42)
+      : stickyTop + (this.ph ? this.ph.offsetHeight / 2 : stageH / 2);
+
+    /* 末尾行程补偿：原页面在最后一条故事后马上就是 footer，
+       可滚动距离不足以让最后几条的中心越过锚点，于是「最下面几张图片」永远选不中。
+       在时间轴末尾补一段留白（大图 sticky 会继续停留），让每个事件都有完整行程。
+       计算时排除留白自身高度，避免 ResizeObserver 反复触发造成高度振荡。 */
+    const need = this.wrapTop + this.centers[this.centers.length - 1] - this.anchor;
+    const baseMax = document.documentElement.scrollHeight - this.tail.offsetHeight - innerHeight;
+    const tailH = Math.max(48, Math.ceil(need - baseMax + 48));
+    if (Math.abs(parseFloat(this.tail.style.height || 0) - tailH) > 2) {
+      this.tail.style.height = tailH + "px";      /* 只在真的变化时才写，避免重排循环 */
+    }
+    this.wrapH = this.wrap.offsetHeight;
+  }
+};
+J.measure();
+
+/* ---------- 当前事件：标题、日期、高亮、连线、图片全部由同一个索引驱动 ---------- */
 let curE = -1;
 let frontEl = $("#jImgA"), backEl = $("#jImgB");
-let loadToken = 0;
+let loadToken = 0, activeEl = null, barOnEl = null;
+
 function setEvent(i) {
   if (i < 0 || i >= E || i === curE) return;
   curE = i;
   const t = tl[i], p = picks[i];
+
   $("#jTitle").textContent = t.title || "";
   $("#jDate").textContent = t.date || "";
-  document.querySelectorAll(".tl-item").forEach((el, k) => el.classList.toggle("active", k === i));
-  document.querySelectorAll("#jBar i").forEach((el, k) => el.classList.toggle("on", k === i));
+  if (activeEl) activeEl.classList.remove("active");
+  activeEl = J.items[i] || null;
+  if (activeEl) activeEl.classList.add("active");
+  if (barOnEl) barOnEl.classList.remove("on");
+  barOnEl = document.querySelector('#jBar i[data-i="' + i + '"]');
+  if (barOnEl) barOnEl.classList.add("on");
   const nowEl = $("#jNow");
   if (nowEl) nowEl.textContent = String(i + 1).padStart(2, "0");
+  const line = $("#tlLine");
+  if (line && J.tops.length) line.style.height = Math.max(0, J.tops[i] + 8) + "px";
+
   const frame = $("#frame"), lq = $("#jLq"), cv = $("#jCv");
+  const token = ++loadToken;
+
+  /* 切换瞬间隐藏两层清晰图（淡出瞬时），只留「本事件」的模糊占位。
+     绝不把上一个事件的照片留在新标题旁边。 */
+  frontEl.classList.remove("on", "zoom");
+  backEl.classList.remove("on", "zoom");
+  frontEl.style.zIndex = backEl.style.zIndex = "";
+  frame.dataset.ready = "0";
+
   if (!p) {
-    /* 该事件没有照片：展示排版封面卡，不用随机图占位 */
-    frontEl.classList.remove("on", "zoom");
-    backEl.classList.remove("on", "zoom");
     lq.classList.add("off");
     cv.innerHTML = faceHtml(t, i);
     cv.classList.add("on");
@@ -848,68 +936,69 @@ function setEvent(i) {
     frame.dataset.kind = "card";
     return;
   }
-  frame.dataset.kind = "photo";
   cv.classList.remove("on");
-  /* 先显示该图的模糊占位，清晰图就绪后淡出 */
-  if (p.lqip) {
-    lq.src = p.lqip;
-    lq.classList.remove("off");
-  } else {
-    lq.classList.add("off");
-  }
   frame.style.cursor = "zoom-in";
-  /* 在背后的隐藏层加载新图，加载完成后再交换到前景；始终让新图层位于旧图层之上 */
-  const token = ++loadToken;
-  backEl.alt = p.title || t.title || "";
-  try { backEl.setAttribute("fetchpriority", "high"); } catch (e) {}
+  frame.dataset.kind = "photo";
+  if (p.lqip) { lq.src = p.lqip; lq.classList.remove("off"); }
+  else lq.classList.add("off");
+
+  /* 离屏加载 + decode：只有本次事件的图真正就绪才淡入。
+     token 丢弃快速滚动时过期的加载结果；settled 保证一次切换只交换一次图层，
+     不再出现旧图闪回 / 文字已换但照片卡住不动。 */
+  const target = backEl;
+  const loader = new Image();
+  loader.decoding = "async";
+  let settled = false;
   const reveal = () => {
-    if (token !== loadToken) return;
-    if (!backEl.complete || backEl.naturalWidth === 0) return;
-    backEl.style.zIndex = 2;
-    frontEl.style.zIndex = 1;
-    backEl.classList.add("on", "zoom");
-    frontEl.classList.remove("on", "zoom");
-    frame.dataset.ready = "1";
-    setTimeout(() => lq.classList.add("off"), 120);
-    setTimeout(() => { backEl.style.zIndex = ""; frontEl.style.zIndex = ""; }, 600);
-    [frontEl, backEl] = [backEl, frontEl];
+    if (settled || token !== loadToken) return;
+    settled = true;
+    if (!loader.naturalWidth) return;         /* 失败就保持本事件的 LQIP，不回退旧图 */
+    target.src = p.src;                       /* 已在缓存，无需等网络 */
+    target.alt = p.title || t.title || "";
+    const show = () => {
+      if (token !== loadToken) return;
+      target.style.zIndex = 2;
+      frontEl.style.zIndex = 1;
+      target.classList.add("on", "zoom");
+      frame.dataset.ready = "1";
+      lq.classList.add("off");
+      [frontEl, backEl] = [backEl, frontEl];
+    };
+    if (target.decode) target.decode().then(show, show); else show();
   };
-  backEl.onload = reveal;
-  backEl.onerror = () => { if (token === loadToken) reveal(); };
-  backEl.src = p.src;
-  if (backEl.complete) reveal();
-  setTimeout(() => { if (token === loadToken) reveal(); }, 1800);
+  loader.onload = reveal;
+  loader.onerror = reveal;
+  loader.src = p.src;
+  if (loader.complete) reveal();
 }
 
-/* 点击时间轴 —— 平滑滑到该事件，由滑动驱动换图 */
+/* 点击时间轴：立即同步图文，再把该事件中心对准锚点 */
 $("#tl").onclick = e => {
   const it = e.target.closest(".tl-item");
-  if (it) it.scrollIntoView({ behavior: "smooth", block: "center" });
+  if (!it) return;
+  const i = Number(it.dataset.i);
+  J.measure();
+  setEvent(i);
+  scrollTo({ top: Math.max(0, J.wrapTop + (J.centers[i] || 0) - J.anchor), behavior: "smooth" });
 };
-$("#frame").onclick = () => {
-  const p = picks[curE];
-  if (p) openLb(p.gi);
-};
-setEvent(0);
+$("#frame").onclick = () => { const p = picks[curE]; if (p) openLb(p.gi); };
 
-/* 预加载：把旅程帧图 + 灯箱大图全部提前拉进浏览器缓存。
-   这样点击时间轴或滑动时，图片已在本地缓存，瞬间切换，不再等待网络。 */
+/* ---------- 预加载：先把旅程要用的小图全部拉进缓存，再拉灯箱大图 ---------- */
 (function preloadImgs(){
-  const seen = new Set();
-  const list = [];
+  const seen = new Set(), small = [], large = [];
   picks.forEach(p => {
     if (!p) return;
-    if (p.src && !seen.has(p.src)) { seen.add(p.src); list.push(p.src); }
+    if (p.src && !seen.has(p.src)) { seen.add(p.src); small.push(p.src); }
     const f = p.full || p.src;
-    if (f && !seen.has(f)) { seen.add(f); list.push(f); }
+    if (f && !seen.has(f)) { seen.add(f); large.push(f); }
   });
+  const list = small.concat(large);
   if (!list.length) return;
   let idx = 0, active = 0;
-  const MAX = 5;                 /* 并发 5，避免一次性打满连接 */
+  const MAX = 6;
   function next(){
     while (active < MAX && idx < list.length) {
-      const url = list[idx++];
-      active++;
+      const url = list[idx++]; active++;
       const img = new Image();
       img.decoding = "async";
       try { img.setAttribute("fetchpriority", "low"); } catch (e) {}
@@ -918,40 +1007,58 @@ setEvent(0);
       img.src = url;
     }
   }
-  const start = () => setTimeout(next, 400);   /* 首屏渲染完再开始，不抢关键资源 */
+  const start = () => setTimeout(next, 120);   /* load 之后立刻开始，不抢首屏 */
   if (document.readyState === "complete") start();
   else addEventListener("load", start, { once: true });
 })();
 
-/* 滚动驱动：切换照片 + 顶部进度条 + 时间轴连线生长 */
+/* ---------- 滚动驱动：rAF 节流，索引只在变化时触发 DOM 更新 ---------- */
 (function () {
-  const items = document.querySelectorAll(".tl-item");
-  const nav = $("#nav"), line = $("#tlLine"), tlBox = $("#tl");
+  const nav = $("#nav");
+  let raf = 0, lastH = -1;
   function progress() {
     const h = document.documentElement.scrollHeight - innerHeight;
     const p = h > 0 ? Math.min(1, Math.max(0, scrollY / h)) : 0;
     nav.style.setProperty("--p", (p * 100).toFixed(2) + "%");
   }
-  function growLine() {
-    if (!line || !tlBox || curE < 0 || !items[curE]) return;
-    const base = tlBox.getBoundingClientRect().top;
-    const r = items[curE].getBoundingClientRect();
-    line.style.height = Math.max(0, r.top + 16 - base) + "px";
-  }
   function pick() {
-    const mid = innerHeight * 0.45;
-    let best = curE < 0 ? 0 : curE, bd = Infinity;
-    items.forEach((el, i) => {
-      const r = el.getBoundingClientRect();
-      const d = Math.abs(r.top + r.height / 2 - mid);
-      if (d < bd) { bd = d; best = i; }
-    });
-    if (best !== curE) setEvent(best);
-    growLine();
+    const top = J.wrapTop - scrollY;              /* 时间轴顶部的视口 Y */
+    const c = J.centers;
+    const maxScroll = Math.max(0, document.documentElement.scrollHeight - innerHeight);
+    const target = J.anchor - top;                /* 锚点相对时间轴顶部的位置 */
+    let i = 0;
+    if (target <= c[0]) i = 0;
+    else if (target >= c[c.length - 1]) i = E - 1;/* 末尾一定能走到最后一个事件 */
+    else {
+      let lo = 0, hi = c.length - 1;              /* 中心点有序，二分找最近 */
+      while (lo < hi) { const m = (lo + hi) >> 1; if (c[m] < target) lo = m + 1; else hi = m; }
+      i = (lo > 0 && Math.abs(c[lo - 1] - target) < Math.abs(c[lo] - target)) ? lo - 1 : lo;
+    }
+    if (top + J.wrapH <= J.anchor) i = E - 1;     /* 整段旅程已滚过 → 锁最后一个 */
+    if (top >= J.anchor) i = 0;                   /* 尚未进入旅程 → 锁第一个 */
+    if (scrollY >= maxScroll - 2) i = E - 1;      /* 触底保底 */
+    if (i !== curE) setEvent(i);
   }
-  function onScroll() { progress(); pick(); }
+  function onScroll() {
+    if (raf) return;
+    raf = requestAnimationFrame(() => {
+      raf = 0;
+      const h = document.documentElement.scrollHeight;
+      if (h !== lastH) { lastH = h; J.measure(); }
+      progress();
+      pick();
+    });
+  }
+  const remeasure = () => { J.measure(); onScroll(); };
   addEventListener("scroll", onScroll, { passive: true });
-  addEventListener("resize", onScroll, { passive: true });
+  addEventListener("resize", remeasure, { passive: true });
+  addEventListener("load", remeasure, { once: true });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(remeasure);
+  if (window.ResizeObserver) {
+    let timer = 0;
+    new ResizeObserver(() => { clearTimeout(timer); timer = setTimeout(remeasure, 60); }).observe(J.box);
+  }
+  setEvent(0);
   onScroll();
 })();
 
@@ -959,11 +1066,22 @@ setEvent(0);
 (function () {
   const lb = $("#lb"), img = $("#lbImg");
   let cur = 0;
+  /* 预加载当前 ±1 的大图，避免 next/prev 切换白屏等待 */
+  const preloadFull = k => {
+    if (!photos.length) return;
+    const p = photos[((k % photos.length) + photos.length) % photos.length];
+    if (p && p.full) { const im = new Image(); im.decoding = "async"; im.src = p.full; }
+  };
   window.openLb = function (i) {
     if (!photos.length) return;
     cur = (i + photos.length) % photos.length;
-    img.src = photos[cur].full || photos[cur].src;
-    img.alt = photos[cur].title || "";
+    const p = photos[cur];
+    img.style.opacity = ".25";
+    img.src = p.full || p.src;
+    img.alt = p.title || "";
+    const show = () => { img.style.opacity = "1"; };
+    if (img.complete && img.naturalWidth) show(); else { img.onload = show; img.onerror = show; }
+    preloadFull(cur + 1); preloadFull(cur - 1);
     lb.classList.add("open");
     document.body.classList.add("locked");
   };
@@ -1069,10 +1187,24 @@ setEvent(0);
   const kick = () => {
     if (!everPlayed && audio.paused) tryPlay();
   };
-  ["pointerdown", "keydown", "touchstart", "wheel"].forEach(ev =>
+  /* 只在用户明确的点击/按键兜底开播；滚动页面不触发 */
+  ["pointerdown", "keydown"].forEach(ev =>
     addEventListener(ev, kick, { once: true, passive: true })
   );
   document.addEventListener("visibilitychange", () => { if (!document.hidden) kick(); });
+})();
+
+/* ---------- 甜蜜瞬间：瀑布流画廊（复用灯箱） ---------- */
+(function () {
+  const box = $("#grid");
+  if (!box || !photos.length) return;
+  const t = $("#galleryTitle"), s = $("#galleryText");
+  if (t) t.textContent = DATA.galleryTitle || "甜蜜瞬间";
+  if (s) s.textContent = DATA.galleryText || "";
+  box.innerHTML = photos.map((p, i) =>
+    `<figure class="shot" data-i="${i}"><img loading="lazy" decoding="async" src="${esc(p.src)}" alt="${esc(p.title || "")}"><figcaption>${esc(p.title || "")}</figcaption></figure>`
+  ).join("");
+  box.onclick = e => { const f = e.target.closest(".shot"); if (f) openLb(Number(f.dataset.i)); };
 })();
 
 /* 花瓣飘落 */
@@ -1106,9 +1238,18 @@ setEvent(0);
     const n = w < 600 ? 9 : w < 1024 ? 14 : 20;
     ps = Array.from({ length: n }, () => spawn(true));
   }
-  let last = 0;
+  let last = 0, running = true;
+  const heroEl = document.querySelector(".hero");
+  if (heroEl && window.IntersectionObserver) {
+    new IntersectionObserver(es => {
+      running = es[0].isIntersecting;
+      if (running) last = 0;
+    }, { threshold: 0 }).observe(heroEl);
+  }
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) last = 0; });
   function frame(t) {
     requestAnimationFrame(frame);
+    if (!running) return;               /* hero 离屏即停画，省电省合成 */
     if (t - last < 33) return;          /* 约 30fps，省电 */
     last = t;
     ctx.clearRect(0, 0, w, h);
@@ -1137,9 +1278,13 @@ setEvent(0);
 (function () {
   const io = new IntersectionObserver(es => {
     es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } });
-  }, { rootMargin: "0px 0px -8% 0px", threshold: .08 });
-  document.querySelectorAll(".reveal,.tl-item").forEach((el, i) => {
-    el.style.transitionDelay = Math.min(i, 8) * 45 + "ms";
+  }, { rootMargin: "0px 0px -2% 0px", threshold: .03 });
+  document.querySelectorAll(".reveal,.shot").forEach((el, i) => {
+    el.style.transitionDelay = Math.min(i, 8) * 40 + "ms";
+    io.observe(el);
+  });
+  document.querySelectorAll(".tl-item").forEach((el, i) => {
+    el.style.transitionDelay = Math.min(i, 4) * 25 + "ms";  /* 时间轴卡片：小延迟，快速滚动不再白屏 */
     io.observe(el);
   });
 
@@ -1148,14 +1293,19 @@ setEvent(0);
   const secs = links.map(a => document.querySelector(a.getAttribute("href"))).filter(Boolean);
   const hero = document.querySelector(".hero");
   let heroH = hero ? hero.offsetHeight - 64 : 400;
+  let raf = 0;
   const onScroll = () => {
-    nav.classList.toggle("stuck", scrollY > heroH);
-    const y = scrollY + innerHeight * .35;
-    let cur = 0;
-    secs.forEach((s, i) => { if (s.offsetTop <= y) cur = i; });
-    links.forEach((a, i) => a.classList.toggle("on", i === cur));
+    if (raf) return;
+    raf = requestAnimationFrame(() => {
+      raf = 0;
+      nav.classList.toggle("stuck", scrollY > heroH);
+      const y = scrollY + innerHeight * .35;
+      let cur = 0;
+      secs.forEach((s, i) => { if (s.offsetTop <= y) cur = i; });
+      links.forEach((a, i) => a.classList.toggle("on", i === cur));
+    });
   };
-  addEventListener("resize", () => { heroH = hero ? hero.offsetHeight - 64 : 400; }, { passive: true });
+  addEventListener("resize", () => { heroH = hero ? hero.offsetHeight - 64 : 400; onScroll(); }, { passive: true });
   addEventListener("scroll", onScroll, { passive: true });
   onScroll();
 })();
